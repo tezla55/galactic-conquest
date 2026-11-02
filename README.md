@@ -49,6 +49,9 @@ This mod was made with the assistance of Claude. That being said, every build wa
 - Download and install [KYBER](https://kyber.gg) (unless you want to set up matches manually using [Instant Action](https://www.nexusmods.com/starwarsbattlefront22017/mods/13320)).
 - Download the latest .exe from [releases](https://github.com/tezla55/galactic-conquest/releases) and run it. The program will guide you through the rest of setup.
 
+## Enjoyed the mod?
+Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
+
 # Credits
 
 **Models**
@@ -67,9 +70,6 @@ This mod was made with the assistance of Claude. That being said, every build wa
 - Bespin, Yavin 4, and Kessel — [Screaming Brain Studios](https://screamingbrainstudios.com/) (*Planet Texture Pack*, CC0)
 - Kamino and the starfield backdrop — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0)
 - Milky Way galaxy texture — NASA/JPL-Caltech/R. Hurt (SSC), public domain
-
-## Enjoyed the mod?
-Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
 
 
 > **Code-only repository.** Bulk planet art (`ui/art/`), 3D models (`3D/`), UI star photos
