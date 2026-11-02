@@ -5856,6 +5856,9 @@ func _stage_kyber_result(result: Dictionary) -> void:
 	# (Level:Complete already fired for the plugin to have sent this at all, so the round
 	# is ending or just has; best-effort, may or may not still be visible in time).
 	if _kyber_link != null and _kyber_link.is_online():
+		var victory := _result_victory_line()
+		if victory != "":
+			_gc_chat(victory)
 		_gc_chat(_result_chat_line())
 		_schedule_match_restart(result)
 	# Bring GC back to the front — the battle is over.
@@ -6297,7 +6300,22 @@ func _result_chat_line() -> String:
 	return "%s holds %s — the assault is repelled." % [who, place]
 
 
+## A separate, unmissable victory line for the match chat, sent before the longer result
+## line. Faction-specific ("CIS VICTORY", "REPUBLIC VICTORY", ...), so it reads correctly
+## for both sides in online/two-player.
+func _result_victory_line() -> String:
+	var winner_team := int(_kyber_staged.get("winner_team", 0))
+	if winner_team == 0:
+		return ""
+	var winner: StringName = _pending_team_one() if winner_team == 1 else Faction.opponent(_pending_team_one())
+	return "%s VICTORY" % Faction.short_name(winner).to_upper()
+
+
 const MATCH_RESTART_DELAY_S := 2.5
+## Ground-phase Supremacy results are staged while the player is still in the ship-phase
+## load. Hold the map switch long enough for the two chat lines to be readable, without
+## bringing back the crashing EOR path.
+const GROUND_PHASE_RESTART_DELAY_S := 5.5
 ## `2026-10-08` (playtest 104, item 14): Blast has no round-end signal at all — the plugin's
 ## `emit_result` fires the INSTANT a team's 100th kill lands (__init__.lua, BLAST_KILL_TARGET),
 ## while players are still actively fighting. Hitting it with the same short delay as a
@@ -6329,7 +6347,11 @@ func _schedule_match_restart(result: Dictionary) -> void:
 		return
 	var battle_id := String(state.pending_battle.get("id", ""))
 	var is_blast_live_kill := String(result.get("reason", "")).begins_with("blast kills")
-	var delay := BLAST_LIVE_RESTART_DELAY_S if is_blast_live_kill else MATCH_RESTART_DELAY_S
+	var delay := MATCH_RESTART_DELAY_S
+	if is_blast_live_kill:
+		delay = BLAST_LIVE_RESTART_DELAY_S
+	elif String(result.get("source", "")) == "ground_phase":
+		delay = GROUND_PHASE_RESTART_DELAY_S
 	get_tree().create_timer(delay).timeout.connect(func():
 		if not is_instance_valid(self) or _kyber_link == null or not _kyber_link.is_online():
 			return
