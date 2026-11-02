@@ -1,0 +1,171 @@
+{
+  "_warning": "All frostbite_mode / level_path verified against the user's full KYBER Launcher map-rotation export (tests/fixtures/kyber_all_modes_rotation.json). Mode ids: PlanetaryBattles=Galactic Assault, Mode1=Supremacy, SpaceBattle=Starfighter Assault, Blast=Blast, Mode9=CO-OP (attack), ModeDefend=CO-OP (defend). A space-lane battle is a capital-ship boarding co-op: S7_1/Levels/Kamino_03/Kamino_03 IS the Republic Venator interior, S6_2/Geonosis_02/Levels/Geonosis_02/Geonosis_02 IS the Separatist Dreadnought interior (both verified 2026-09-10 from a live playthrough — the log streams Venator_Hangar / Dreadnought_DroidDeploymentBay etc). The MAP is the defender's ship; the MODE is Mode9 when the player is the boarding party, ModeDefend when the player's ship is being boarded. team_one_faction / defender_faction are still best guesses gated by BattleResultParser.PLUGIN_CONTRACT_VERIFIED, EXCEPT geonosis_ga's team_one_faction, corrected to 'republic' 2026-09-05 from a real match: the original 'separatist' guess put a Republic-playing human on the CIS team with no way to switch (KyberLink's plugin re-asserts SetTeam every 5s). That capture disproved the 'team 1 = the planet's native faction' model the guesses were made under (Geonosis is a CIS world, so 'separatist' looked right) in favour of a simpler one: Team 1 is the light-side faction on every level, planet notwithstanding — EXCEPT it was then itself disproved for the co-op capital-ship boarding maps specifically: a live Kamino-Naboo lane battle (coop_dreadnought_attack path, defender CIS) put the human on the actual CIS team while GC's own labels called it Republic. 2026-09-11 tried 'Team 1 = the ship's own crew' for coop_dreadnought_*; reverted 2026-10-30 after a live CIS co-op defend put the player on Team 1 as Republic. The correct global rule is Team 1 = light side, Team 2 = dark side, including co-op: all four Clone Wars co-op entries now use 'republic' in team_one_faction, and the human is pinned by faction side, not by ship crew. Re-verify in-game.",
+  "_selection": "KyberBridge.choose_map_key: a HOME world (Kamino, Geonosis) is always Galactic Assault. Otherwise trigger 'fleet' when a fleet defends (-> Supremacy); trigger 'garrison' otherwise, narrowed by held_by (the current owner): GA for a Republic world, Blast for a Separatist one, CO-OP for Felucia. Ryloth is always Starfighter Assault (trigger 'any'). A space lane is a capital-ship boarding co-op: the MAP is the defender's ship (defender_faction) and the coop_role is 'attack' (Mode9) when player_faction == request.attacker, 'defend' (ModeDefend) otherwise.",
+  "schema_verified": true,
+  "maps": [
+    {
+      "key": "kamino_supremacy",
+      "planet": "kamino",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Kamino — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S7_1/Levels/Kamino_03/Kamino_03",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "kamino_ga",
+      "planet": "kamino",
+      "trigger": "garrison",
+      "mode": "galactic_assault",
+      "display_name": "Kamino — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "Levels/MP/Kamino_01/Kamino_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "geonosis_supremacy",
+      "planet": "geonosis",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Geonosis — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S6_2/Geonosis_02/Levels/Geonosis_02/Geonosis_02",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "geonosis_ga",
+      "planet": "geonosis",
+      "trigger": "garrison",
+      "mode": "galactic_assault",
+      "display_name": "Geonosis — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "S5_1/Levels/MP/Geonosis_01/Geonosis_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "naboo_supremacy",
+      "planet": "naboo",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Naboo — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S7_2/Levels/Naboo_03/Naboo_03",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "naboo_ga",
+      "planet": "naboo",
+      "trigger": "garrison",
+      "held_by": "republic",
+      "mode": "galactic_assault",
+      "display_name": "Naboo — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "Levels/MP/Naboo_01/Naboo_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "naboo_blast",
+      "planet": "naboo",
+      "trigger": "garrison",
+      "held_by": "separatist",
+      "mode": "blast",
+      "display_name": "Naboo Palace Hangar — Blast",
+      "frostbite_mode": "Blast",
+      "level_path": "Levels/MP/Naboo_02/Naboo_02",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "kashyyyk_supremacy",
+      "planet": "kashyyyk",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Kashyyyk — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S7/Levels/Kashyyyk_02/Kashyyyk_02",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "kashyyyk_ga",
+      "planet": "kashyyyk",
+      "trigger": "garrison",
+      "held_by": "republic",
+      "mode": "galactic_assault",
+      "display_name": "Kashyyyk — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "Levels/MP/Kashyyyk_01/Kashyyyk_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "kashyyyk_blast",
+      "planet": "kashyyyk",
+      "trigger": "garrison",
+      "held_by": "separatist",
+      "mode": "blast",
+      "display_name": "Kashyyyk — Blast",
+      "frostbite_mode": "Blast",
+      "level_path": "Levels/MP/Kashyyyk_01/Kashyyyk_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "felucia_supremacy",
+      "planet": "felucia",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Felucia — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S8/Felucia/Levels/MP/Felucia_01/Felucia_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "felucia_coop",
+      "planet": "felucia",
+      "trigger": "garrison",
+      "mode": "coop",
+      "display_name": "Felucia — CO-OP",
+      "frostbite_mode": "Mode9",
+      "level_path": "S8/Felucia/Levels/MP/Felucia_01/Felucia_01",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "coop_venator_defend",
+      "mode": "coop",
+      "coop_role": "defend",
+      "display_name": "Republic Venator — Co-Op Defense",
+      "frostbite_mode": "ModeDefend",
+      "level_path": "S7_1/Levels/Kamino_03/Kamino_03",
+      "defender_faction": "republic",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "coop_venator_attack",
+      "mode": "coop",
+      "coop_role": "attack",
+      "display_name": "Republic Venator — Co-Op Attack",
+      "frostbite_mode": "Mode9",
+      "level_path": "S7_1/Levels/Kamino_03/Kamino_03",
+      "defender_faction": "republic",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "coop_dreadnought_defend",
+      "mode": "coop",
+      "coop_role": "defend",
+      "display_name": "Separatist Dreadnought - Co-Op Defense",
+      "frostbite_mode": "ModeDefend",
+      "level_path": "S6_2/Geonosis_02/Levels/Geonosis_02/Geonosis_02",
+      "defender_faction": "separatist",
+      "team_one_faction": "republic"
+    },
+    {
+      "key": "coop_dreadnought_attack",
+      "mode": "coop",
+      "coop_role": "attack",
+      "display_name": "Separatist Dreadnought - Co-Op Attack",
+      "frostbite_mode": "Mode9",
+      "level_path": "S6_2/Geonosis_02/Levels/Geonosis_02/Geonosis_02",
+      "defender_faction": "separatist",
+      "team_one_faction": "republic"
+    }
+  ]
+}

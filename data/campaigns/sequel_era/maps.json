@@ -1,0 +1,150 @@
+{
+  "_warning": "frostbite_mode / level_path for Starkiller Base, Crait, Jakku, and Takodana are verified against the user's full KYBER Launcher map-rotation export (tests/fixtures/kyber_all_modes_rotation.json). Mode ids: PlanetaryBattles=Galactic Assault, Mode1=Supremacy, Blast=Blast, Mode9=CO-OP (attack), ModeDefend=CO-OP (defend). AJAN KLOSS IS 'PAINTBALL' IN THE GAME FILES (S9/Paintball/Levels/MP/Paintball_01/Paintball_01) — the user found this and live-tested it 2026-09-12: KYBER loaded it as Mode1 (Supremacy) and played through cleanly (real capture: bundle streams for Paintball_01/Content/Lobby/Lighting/Collision/Day, then 'Server level loaded', then the Mode1 bundle). No Blast entry for Paintball exists anywhere in the rotation export, though (checked every mode) — so ajankloss_supremacy uses trigger 'any' rather than 'fleet', the same map covers both the fleet-defended and garrison-only case, mirroring how GCW's Scarif handles its own missing-Blast gap (scarif_coop uses trigger 'garrison' instead of forcing a nonexistent Blast) rather than the two-Takodana-stand-in-entries this file used before Ajan Kloss's real map was found. The two dedicated co-op ship-interior maps (S9_3/COOP_NT_MC85, S9_3/COOP_NT_FOSD) ARE real and verified, confirmed working for both Mode9 and ModeDefend in the export — they were previously tried as a GCW space-lane stand-in and removed 2026-09-10 for loading the wrong factions (First Order/Resistance) in a Galactic Civil War context; here, that pairing is exactly correct. Unlike Clone Wars' Kamino_03/Geonosis_02 (one dual-purpose level file serving both a planet's Supremacy match AND its lane co-op), these are dedicated, single-purpose co-op levels — no ground-phase-to-capital-ship transition exists for this campaign at all, and none is needed. team_one_faction is the LIGHT-SIDE faction on the sequel ship co-ops: Team 1 is always the light side (Resistance), Team 2 the dark side (First Order), regardless of which side the human plays. All four sequel co-op entries use 'resistance'; the human is pinned by faction side (Resistance -> 1, First Order -> 2). 2026-10-30 live: First Order attacking or defending must be Team 2, not Team 1. Planet battles use the same light-side convention.",
+  "_selection": "KyberBridge.choose_map_key: a HOME world (Starkiller Base, Crait) is always Galactic Assault. Otherwise trigger 'fleet' when a fleet defends (-> Supremacy, or the fleet-agnostic Ajan Kloss entry). Garrison-only is now a HELD_BY split, 2026-09-12 (previously unconditional Blast, the user's own initial simplification — since refined): a Resistance-held garrison plays CO-OP (Mode9, the planet's own level — Jakku_02 / Takodana_02 / Paintball_01 — same trick Clone Wars' felucia_coop already uses, not a dedicated ship interior), a First Order-held one plays Blast (Jakku/Takodana) or Supremacy (Ajan Kloss, which has no real Blast at all). Implemented as one extra entry per planet (`<planet>_coop`, trigger 'garrison' + held_by 'resistance', `_score_map_entry` scores held_by matches +1 over an unscoped trigger match, so it only outranks the Blast/'any' fallback when Resistance actually holds it) rather than rewriting the existing Blast/'any' entries, which stay exactly as they were for every other case. A space lane is a capital-ship boarding co-op, same shape as Clone Wars: the MAP is the defender's ship (defender_faction) and the coop_role is 'attack' (Mode9) when player_faction == request.attacker, 'defend' (ModeDefend) otherwise.",
+  "schema_verified": true,
+  "maps": [
+    {
+      "key": "starkiller_ga",
+      "planet": "starkiller_base",
+      "trigger": "any",
+      "mode": "galactic_assault",
+      "display_name": "Starkiller Base — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "Levels/MP/StarKiller_01/StarKiller_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "crait_ga",
+      "planet": "crait",
+      "trigger": "any",
+      "mode": "galactic_assault",
+      "display_name": "Crait — Galactic Assault",
+      "frostbite_mode": "PlanetaryBattles",
+      "level_path": "S1/Levels/Crait_01/Crait_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "jakku_supremacy",
+      "planet": "jakku",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Jakku — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S9/Jakku_02/Jakku_02",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "jakku_blast",
+      "planet": "jakku",
+      "trigger": "garrison",
+      "mode": "blast",
+      "display_name": "Jakku — Blast",
+      "frostbite_mode": "Blast",
+      "level_path": "Levels/MP/Jakku_01/Jakku_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "jakku_coop",
+      "planet": "jakku",
+      "trigger": "garrison",
+      "held_by": "resistance",
+      "mode": "coop",
+      "display_name": "Jakku — CO-OP",
+      "frostbite_mode": "Mode9",
+      "level_path": "S9/Jakku_02/Jakku_02",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "takodana_supremacy",
+      "planet": "takodana",
+      "trigger": "fleet",
+      "mode": "supremacy",
+      "display_name": "Takodana — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S9/Takodana_02/Takodana_02",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "takodana_blast",
+      "planet": "takodana",
+      "trigger": "garrison",
+      "mode": "blast",
+      "display_name": "Takodana — Blast",
+      "frostbite_mode": "Blast",
+      "level_path": "Levels/MP/Takodana_01/Takodana_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "takodana_coop",
+      "planet": "takodana",
+      "trigger": "garrison",
+      "held_by": "resistance",
+      "mode": "coop",
+      "display_name": "Takodana — CO-OP",
+      "frostbite_mode": "Mode9",
+      "level_path": "S9/Takodana_02/Takodana_02",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "ajankloss_supremacy",
+      "planet": "ajan_kloss",
+      "trigger": "any",
+      "mode": "supremacy",
+      "display_name": "Ajan Kloss — Supremacy",
+      "frostbite_mode": "Mode1",
+      "level_path": "S9/Paintball/Levels/MP/Paintball_01/Paintball_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "ajankloss_coop",
+      "planet": "ajan_kloss",
+      "trigger": "garrison",
+      "held_by": "resistance",
+      "mode": "coop",
+      "display_name": "Ajan Kloss — CO-OP",
+      "frostbite_mode": "Mode9",
+      "level_path": "S9/Paintball/Levels/MP/Paintball_01/Paintball_01",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "coop_mc85_defend",
+      "mode": "coop",
+      "coop_role": "defend",
+      "display_name": "Resistance MC85 Star Cruiser - Co-Op Defense",
+      "frostbite_mode": "ModeDefend",
+      "level_path": "S9_3/COOP_NT_MC85/COOP_NT_MC85",
+      "defender_faction": "resistance",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "coop_mc85_attack",
+      "mode": "coop",
+      "coop_role": "attack",
+      "display_name": "Resistance MC85 Star Cruiser - Co-Op Attack",
+      "frostbite_mode": "Mode9",
+      "level_path": "S9_3/COOP_NT_MC85/COOP_NT_MC85",
+      "defender_faction": "resistance",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "coop_fosd_defend",
+      "mode": "coop",
+      "coop_role": "defend",
+      "display_name": "First Order Star Destroyer - Co-Op Defense",
+      "frostbite_mode": "ModeDefend",
+      "level_path": "S9_3/COOP_NT_FOSD/COOP_NT_FOSD",
+      "defender_faction": "first_order",
+      "team_one_faction": "resistance"
+    },
+    {
+      "key": "coop_fosd_attack",
+      "mode": "coop",
+      "coop_role": "attack",
+      "display_name": "First Order Star Destroyer - Co-Op Attack",
+      "frostbite_mode": "Mode9",
+      "level_path": "S9_3/COOP_NT_FOSD/COOP_NT_FOSD",
+      "defender_faction": "first_order",
+      "team_one_faction": "resistance"
+    }
+  ]
+}

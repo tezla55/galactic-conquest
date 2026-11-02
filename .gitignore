@@ -1,0 +1,55 @@
+.godot/
+.local/
+.sentry-native/
+.import/
+export.cfg
+*.translation
+build/
+# Never commit EA credentials or KYBER tokens.
+.env
+secrets.cfg
+
+# Versioned local .exe/.pck test builds and crash-dump/log capture folders — large,
+# disposable, not source.
+/Galactic Conquest*.exe
+/Galactic Conquest*.pck
+/Galactic Conquest [0-9]*/
+logs_*/
+logs_*.zip
+/ConsoleCommands.txt
+
+# Scratch scripts for a one-off headless check (screenshots, behavior probes) — see
+# docs/DIAGNOSTICS.md. Delete them when done; this is just a safety net if one is forgotten.
+tools/_diag_*.gd
+tools/_diag_*.gd.uid
+
+# Modding toolchain + reference mods dropped in for analysis — big binaries, not ours to
+# redistribute.
+FrostyToolsuite*/
+*.fbmod
+*.fbproject
+map_rotation*.txt
+# Frosty exports / screenshots dropped in for analysis
+/*.bin
+/*.png
+!/SWBF2_GC_Logo.png
+!/GC_Map_Screenshot.png
+!/Tatooine_Battle_Screenshot.png
+/*.jpg
+# Vanilla game-asset exports the mod forge diffs against — local only, per install.
+bridge/kyber_mod/reference/vanilla/*.bin
+
+# Code-only snapshot:
+# - bulk planet/galaxy art, 3D models, UI star photos and sounds stay out of git
+# - personal playtest notes stay out of the public source tree
+# - the deep-zoom star bed is procedural (ui/deep_stars.gdshader), so it needs no photo
+/ui/art/*
+!/ui/art/splash.png
+!/ui/art/splash.png.import
+!/ui/art/Insignia_Logos/
+!/ui/art/Insignia_Logos/**
+/3D/
+/ui/Stars/
+/sound/
+/Playtest notes*.txt
+/TEAM_PREQ_MODE1.txt

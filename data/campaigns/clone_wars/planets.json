@@ -1,0 +1,233 @@
+{
+  "era": "clone_wars",
+  "planets": [
+    {
+      "id": "kamino",
+      "display_name": "Kamino",
+      "owner": "republic",
+      "capital_faction": "republic",
+      "income": 120,
+      "garrison": 4,
+      "x": 180,
+      "y": 620,
+      "connections": [
+        "kamino_naboo_space"
+      ],
+      "map_pool": [
+        "kamino_supremacy",
+        "kamino_ga"
+      ],
+      "home_defence": true
+    },
+    {
+      "id": "naboo",
+      "display_name": "Naboo",
+      "owner": "neutral",
+      "income": 100,
+      "garrison": 3,
+      "x": 300,
+      "y": 250,
+      "connections": [
+        "naboo_kashyyyk_space",
+        "kamino_naboo_space",
+        "naboo_felucia_space"
+      ],
+      "map_pool": [
+        "naboo_supremacy",
+        "naboo_ga",
+        "naboo_blast"
+      ],
+      "home_defence": false
+    },
+    {
+      "id": "kashyyyk",
+      "display_name": "Kashyyyk",
+      "owner": "neutral",
+      "income": 90,
+      "garrison": 3,
+      "x": 620,
+      "y": 170,
+      "connections": [
+        "naboo_kashyyyk_space",
+        "felucia_kashyyyk_space",
+        "kashyyyk_geonosis_space"
+      ],
+      "map_pool": [
+        "kashyyyk_supremacy",
+        "kashyyyk_ga",
+        "kashyyyk_blast"
+      ]
+    },
+    {
+      "id": "felucia",
+      "display_name": "Felucia",
+      "owner": "neutral",
+      "income": 80,
+      "garrison": 3,
+      "x": 760,
+      "y": 360,
+      "connections": [
+        "felucia_kashyyyk_space",
+        "naboo_felucia_space",
+        "geonosis_felucia_space"
+      ],
+      "map_pool": [
+        "felucia_supremacy",
+        "felucia_coop"
+      ]
+    },
+    {
+      "id": "geonosis",
+      "display_name": "Geonosis",
+      "owner": "separatist",
+      "capital_faction": "separatist",
+      "income": 120,
+      "garrison": 4,
+      "x": 820,
+      "y": 600,
+      "connections": [
+        "geonosis_felucia_space",
+        "kashyyyk_geonosis_space"
+      ],
+      "map_pool": [
+        "geonosis_supremacy",
+        "geonosis_ga"
+      ],
+      "home_defence": true
+    },
+    {
+      "id": "naboo_kashyyyk_space",
+      "display_name": "Naboo\u2013Kashyyyk hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 455,
+      "y": 205,
+      "connections": [
+        "naboo",
+        "kashyyyk"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    },
+    {
+      "id": "felucia_kashyyyk_space",
+      "display_name": "Felucia\u2013Kashyyyk hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 695,
+      "y": 265,
+      "connections": [
+        "felucia",
+        "kashyyyk"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    },
+    {
+      "id": "kamino_naboo_space",
+      "display_name": "Kamino\u2013Naboo hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 240,
+      "y": 435,
+      "connections": [
+        "kamino",
+        "naboo",
+        "naboo_felucia_space"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    },
+    {
+      "id": "naboo_felucia_space",
+      "display_name": "Naboo\u2013Felucia hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 530,
+      "y": 305,
+      "connections": [
+        "naboo",
+        "felucia",
+        "kamino_naboo_space"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    },
+    {
+      "id": "geonosis_felucia_space",
+      "display_name": "Geonosis\u2013Felucia hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 790,
+      "y": 480,
+      "connections": [
+        "geonosis",
+        "felucia"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    },
+    {
+      "id": "kashyyyk_geonosis_space",
+      "display_name": "Kashyyyk–Geonosis hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 720,
+      "y": 385,
+      "connections": [
+        "kashyyyk",
+        "geonosis"
+      ],
+      "map_pool": [
+        "coop_venator_defend",
+        "coop_venator_attack",
+        "coop_dreadnought_defend",
+        "coop_dreadnought_attack"
+      ]
+    }
+  ],
+  "starting_fleets": [
+    {
+      "owner": "republic",
+      "location": "kamino",
+      "strength": 5
+    },
+    {
+      "owner": "separatist",
+      "location": "geonosis",
+      "strength": 5
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "_note": "Campaign index. Each entry names an era, its two factions, and where that campaign's planet/map data lives. Read by bridge/content_loader.gd (load_campaigns / campaign_def). light_side is the faction that is KYBER Team 1 on its levels (see data/campaigns/*/maps.json team_one_faction).",
+  "campaigns": [
+    {
+      "id": "clone_wars",
+      "display_name": "Clone Wars",
+      "era": "clone_wars",
+      "factions": ["republic", "separatist"],
+      "light_side": "republic",
+      "planets": "res://data/campaigns/clone_wars/planets.json",
+      "maps": "res://data/campaigns/clone_wars/maps.json"
+    },
+    {
+      "id": "galactic_civil_war",
+      "display_name": "Galactic Civil War",
+      "era": "galactic_civil_war",
+      "factions": ["empire", "rebellion"],
+      "light_side": "rebellion",
+      "planets": "res://data/campaigns/galactic_civil_war/planets.json",
+      "maps": "res://data/campaigns/galactic_civil_war/maps.json"
+    },
+    {
+      "id": "sequel_era",
+      "display_name": "First Order / Resistance",
+      "era": "sequel_era",
+      "factions": ["first_order", "resistance"],
+      "light_side": "resistance",
+      "planets": "res://data/campaigns/sequel_era/planets.json",
+      "maps": "res://data/campaigns/sequel_era/maps.json"
+    }
+  ]
+}

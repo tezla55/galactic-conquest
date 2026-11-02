@@ -1,0 +1,310 @@
+{
+  "era": "sequel_era",
+  "_layout": "Matches main.gd's SEQUEL_LAYOUT (x/y here are screen-space — y grows DOWNWARD, the opposite sign convention from SEQUEL_LAYOUT's Vector2s, same inversion every other campaign's pair of layouts already has; not algebraically derived from those values, just kept in the same relative arrangement — see test_sequel_era_hyperlane_graph_is_planar). Five planets, ten lane nodes (2026-09-12 revision, up from the original five-lane pentagon): Starkiller Base (First Order home, top-left) - Ajan Kloss (top-middle) - Crait (Resistance home, bottom-middle) - Takodana (bottom-left) - Jakku (middle-left) - back to Starkiller Base is still the outer loop, but Crait-Ajan Kloss is now a THREE-node arc swinging out to the right, around the galactic core, instead of a single node cutting straight through the middle — the direct route and the arc occupy disjoint x ranges so this can't cross anything. Three more lanes were added on top of the loop, each starting or ending at a planet (or, for the arc bypass, a lane node) the loop already touches, which is exactly what keeps a hand-placed addition planar for free (a shared endpoint always exempts a segment pair from the crossing check): Crait-Jakku (a lower-left bypass, swinging below/outside Takodana), a second, outer Starkiller Base-Jakku route (swinging further left/out from the direct one — Starkiller Base and Jakku are connected two different ways on purpose, not a mistake), and a second arc route between the arc's own two end nodes (crait_ajankloss_space_1, closest to Crait, and crait_ajankloss_space_3, closest to Ajan Kloss) via one more node bulging further right than the first arc's middle node — two genuinely separate right-side routes between Crait and Ajan Kloss now, so a defending fleet can't be funnelled through a single chokepoint.",
+  "planets": [
+    {
+      "id": "starkiller_base",
+      "display_name": "Starkiller Base",
+      "owner": "first_order",
+      "capital_faction": "first_order",
+      "income": 120,
+      "garrison": 4,
+      "x": 200,
+      "y": 180,
+      "connections": [
+        "ajankloss_starkiller_space",
+        "starkiller_jakku_space",
+        "starkiller_jakku_outer_space"
+      ],
+      "map_pool": [
+        "starkiller_ga"
+      ],
+      "home_defence": true
+    },
+    {
+      "id": "ajan_kloss",
+      "display_name": "Ajan Kloss",
+      "owner": "neutral",
+      "income": 90,
+      "garrison": 3,
+      "x": 470,
+      "y": 140,
+      "connections": [
+        "ajankloss_starkiller_space",
+        "crait_ajankloss_space_3"
+      ],
+      "map_pool": [
+        "ajankloss_supremacy"
+      ]
+    },
+    {
+      "id": "jakku",
+      "display_name": "Jakku",
+      "owner": "neutral",
+      "income": 90,
+      "garrison": 3,
+      "x": 120,
+      "y": 430,
+      "connections": [
+        "starkiller_jakku_space",
+        "starkiller_jakku_outer_space",
+        "jakku_takodana_space",
+        "crait_jakku_space"
+      ],
+      "map_pool": [
+        "jakku_supremacy",
+        "jakku_blast"
+      ]
+    },
+    {
+      "id": "takodana",
+      "display_name": "Takodana",
+      "owner": "neutral",
+      "income": 90,
+      "garrison": 3,
+      "x": 210,
+      "y": 680,
+      "connections": [
+        "jakku_takodana_space",
+        "takodana_crait_space"
+      ],
+      "map_pool": [
+        "takodana_supremacy",
+        "takodana_blast"
+      ]
+    },
+    {
+      "id": "crait",
+      "display_name": "Crait",
+      "owner": "resistance",
+      "capital_faction": "resistance",
+      "income": 120,
+      "garrison": 4,
+      "x": 460,
+      "y": 720,
+      "connections": [
+        "takodana_crait_space",
+        "crait_ajankloss_space_1",
+        "crait_jakku_space"
+      ],
+      "map_pool": [
+        "crait_ga"
+      ],
+      "home_defence": true
+    },
+    {
+      "id": "ajankloss_starkiller_space",
+      "display_name": "Ajan Kloss–Starkiller Base hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 335,
+      "y": 160,
+      "connections": [
+        "ajan_kloss",
+        "starkiller_base"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "starkiller_jakku_space",
+      "display_name": "Starkiller Base–Jakku hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 160,
+      "y": 305,
+      "connections": [
+        "starkiller_base",
+        "jakku"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "starkiller_jakku_outer_space",
+      "display_name": "Starkiller Base–Jakku hyperlane (outer route)",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 20,
+      "y": 305,
+      "connections": [
+        "starkiller_base",
+        "jakku"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "jakku_takodana_space",
+      "display_name": "Jakku–Takodana hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 165,
+      "y": 555,
+      "connections": [
+        "jakku",
+        "takodana"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "crait_jakku_space",
+      "display_name": "Crait–Jakku hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 110,
+      "y": 790,
+      "connections": [
+        "crait",
+        "jakku"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "takodana_crait_space",
+      "display_name": "Takodana–Crait hyperlane",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 335,
+      "y": 700,
+      "connections": [
+        "takodana",
+        "crait"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "crait_ajankloss_space_1",
+      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 1 of 3)",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 570,
+      "y": 545,
+      "connections": [
+        "crait",
+        "crait_ajankloss_space_2",
+        "crait_ajankloss_space_2b"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "crait_ajankloss_space_2",
+      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 2 of 3)",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 620,
+      "y": 370,
+      "connections": [
+        "crait_ajankloss_space_1",
+        "crait_ajankloss_space_3"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "crait_ajankloss_space_3",
+      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 3 of 3)",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 560,
+      "y": 220,
+      "connections": [
+        "crait_ajankloss_space_2",
+        "crait_ajankloss_space_2b",
+        "ajan_kloss"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    },
+    {
+      "id": "crait_ajankloss_space_2b",
+      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, alternate route)",
+      "owner": "neutral",
+      "capturable": false,
+      "income": 0,
+      "garrison": 0,
+      "x": 730,
+      "y": 380,
+      "connections": [
+        "crait_ajankloss_space_1",
+        "crait_ajankloss_space_3"
+      ],
+      "map_pool": [
+        "coop_mc85_defend",
+        "coop_mc85_attack",
+        "coop_fosd_defend",
+        "coop_fosd_attack"
+      ]
+    }
+  ],
+  "starting_fleets": [
+    {
+      "owner": "first_order",
+      "location": "starkiller_base",
+      "strength": 5
+    },
+    {
+      "owner": "resistance",
+      "location": "crait",
+      "strength": 5
+    }
+  ]
+}

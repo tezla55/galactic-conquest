@@ -1,0 +1,183 @@
+{
+  "era": "galactic_civil_war",
+  "_note": "8 planets, 9 space-lane nodes, and 2 DIRECT planet-to-planet edges: Death Star II<->Endor and Hoth<->Bespin. From Endor there are two ways forward: SHORT to Kessel (endor_kessel_space, one node, 2 hops) and LONG to Bespin (endor_tatooine_1_space -> endor_tatooine_2_space, two nodes, 4 hops; node 1 also branches to Kessel). Kessel is the easy first objective, Bespin the slog. Empire home = Death Star II (only via Endor). Rebel home = Hoth, a dead-end beneath Bespin, reachable only by the direct Bespin jump or by hanging off the bespin_tatooine_space junction (a 3-way node). x/y is a 2D embedding of main.gd's GCW_LAYOUT (x = 800 + nx*600, y = 500 - ny*400) and feeds Planet.position for the planarity test only — gameplay distance is BFS hop count over connections.",
+  "planets": [
+	{
+	  "id": "death_star_ii",
+	  "display_name": "Death Star II",
+	  "owner": "empire",
+	  "capital_faction": "empire",
+	  "income": 120,
+	  "garrison": 4,
+	  "home_defence": true,
+	  "x": 272,
+	  "y": 660,
+	  "connections": ["endor"],
+	  "map_pool": ["dsii_ga"]
+	},
+	{
+	  "id": "endor",
+	  "display_name": "Endor",
+	  "owner": "neutral",
+	  "income": 85,
+	  "garrison": 3,
+	  "x": 428,
+	  "y": 684,
+	  "connections": ["death_star_ii", "endor_kessel_space", "endor_tatooine_1_space"],
+	  "map_pool": ["endor_ga", "endor_blast"]
+	},
+	{
+	  "id": "hoth",
+	  "display_name": "Hoth",
+	  "owner": "rebellion",
+	  "capital_faction": "rebellion",
+	  "income": 120,
+	  "garrison": 4,
+	  "home_defence": true,
+	  "x": 1412,
+	  "y": 796,
+	  "connections": ["bespin", "bespin_tatooine_space"],
+	  "map_pool": ["hoth_ga"]
+	},
+	{
+	  "id": "bespin",
+	  "display_name": "Bespin",
+	  "owner": "neutral",
+	  "income": 100,
+	  "garrison": 3,
+	  "x": 1364,
+	  "y": 608,
+	  "connections": ["hoth", "bespin_scarif_space", "bespin_tatooine_space"],
+	  "map_pool": ["bespin_blast"]
+	},
+	{
+	  "id": "kessel",
+	  "display_name": "Kessel",
+	  "owner": "neutral",
+	  "income": 80,
+	  "garrison": 3,
+	  "x": 752,
+	  "y": 420,
+	  "connections": ["kessel_scarif_space", "endor_kessel_space", "endor_tatooine_1_space", "yavin_iv"],
+	  "map_pool": ["kessel_blast", "kessel_coop", "kessel_extraction"]
+	},
+	{
+	  "id": "scarif",
+	  "display_name": "Scarif Beach",
+	  "owner": "neutral",
+	  "income": 90,
+	  "garrison": 3,
+	  "x": 1136,
+	  "y": 356,
+	  "connections": ["bespin_scarif_space", "kessel_scarif_space_2", "scarif_tatooine_space", "scarif_yavin_space"],
+	  "map_pool": ["scarif_supremacy", "scarif_coop"]
+	},
+	{
+	  "id": "tatooine",
+	  "display_name": "Tatooine",
+	  "owner": "neutral",
+	  "income": 100,
+	  "garrison": 3,
+	  "x": 908,
+	  "y": 636,
+	  "connections": ["bespin_tatooine_space", "endor_tatooine_2_space", "scarif_tatooine_space", "tatooine_yavin_space"],
+	  "map_pool": ["tatooine_supremacy", "tatooine_ga", "tatooine_coop"]
+	},
+	{
+	  "id": "yavin_iv",
+	  "display_name": "Yavin 4",
+	  "owner": "neutral",
+	  "income": 90,
+	  "garrison": 3,
+	  "x": 860,
+	  "y": 428,
+	  "connections": ["scarif_yavin_space", "tatooine_yavin_space", "kessel"],
+	  "map_pool": ["yavin_blast", "yavin_ga"]
+	},
+
+	{
+	  "id": "endor_kessel_space",
+	  "display_name": "Endor–Kessel hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 536, "y": 508,
+	  "connections": ["endor", "kessel"],
+	  "map_pool": ["endor_blast"]
+	},
+	{
+	  "id": "endor_tatooine_1_space",
+	  "display_name": "Endor–Tatooine hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 590, "y": 672,
+	  "connections": ["endor", "endor_tatooine_2_space", "kessel"],
+	  "map_pool": ["endor_blast"]
+	},
+	{
+	  "id": "endor_tatooine_2_space",
+	  "display_name": "Endor–Tatooine hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 752, "y": 700,
+	  "connections": ["endor_tatooine_1_space", "tatooine"],
+	  "map_pool": ["tatooine_blast"]
+	},
+	{
+	  "id": "bespin_scarif_space",
+	  "display_name": "Bespin–Scarif hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 1280, "y": 484,
+	  "connections": ["bespin", "scarif"],
+	  "map_pool": ["bespin_blast"]
+	},
+	{
+	  "id": "kessel_scarif_space",
+	  "display_name": "Kessel–Scarif hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 872, "y": 268,
+	  "connections": ["kessel", "kessel_scarif_space_2"],
+	  "map_pool": ["kessel_blast"]
+	},
+	{
+	  "id": "kessel_scarif_space_2",
+	  "display_name": "Kessel–Scarif crossing",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 1004, "y": 312,
+	  "connections": ["kessel_scarif_space", "scarif"],
+	  "map_pool": ["kessel_blast"]
+	},
+	{
+	  "id": "bespin_tatooine_space",
+	  "display_name": "Bespin–Tatooine hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 1130, "y": 644,
+	  "connections": ["bespin", "tatooine", "hoth"],
+	  "map_pool": ["tatooine_blast"]
+	},
+	{
+	  "id": "scarif_tatooine_space",
+	  "display_name": "Scarif–Tatooine hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 1004, "y": 488,
+	  "connections": ["scarif", "tatooine"],
+	  "map_pool": ["tatooine_blast"]
+	},
+	{
+	  "id": "scarif_yavin_space",
+	  "display_name": "Scarif–Yavin 4 hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 992, "y": 396,
+	  "connections": ["scarif", "yavin_iv"],
+	  "map_pool": ["yavin_blast"]
+	},
+	{
+	  "id": "tatooine_yavin_space",
+	  "display_name": "Tatooine–Yavin 4 hyperlane",
+	  "owner": "neutral", "capturable": false, "income": 0, "garrison": 0,
+	  "x": 860, "y": 532,
+	  "connections": ["tatooine", "yavin_iv"],
+	  "map_pool": ["yavin_blast"]
+	}
+  ],
+  "starting_fleets": [
+	{ "owner": "empire", "location": "death_star_ii", "strength": 5 },
+	{ "owner": "rebellion", "location": "hoth", "strength": 5 }
+  ]
+}

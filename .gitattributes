@@ -1,0 +1,23 @@
+# Normalize text files to LF; Windows-only launchers stay CRLF.
+* text=auto eol=lf
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.json text eol=lf
+*.lua text eol=lf
+*.proto text eol=lf
+*.cfg text eol=lf
+*.toml text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.otf binary
+*.exe binary
+*.pck binary
+*.zip binary

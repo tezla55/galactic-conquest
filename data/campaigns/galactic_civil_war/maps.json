@@ -1,0 +1,261 @@
+{
+  "_warning": "Every frostbite_mode / level_path verified against tests/fixtures/kyber_all_modes_rotation.json. team_one_faction = 'rebellion' everywhere is the light-side-is-Team-1 inference from Clone Wars, still gated by BattleResultParser.PLUGIN_CONTRACT_VERIFIED == false. Mode5 = Extraction: it appears on exactly two maps in the rotation export (Kessel, Jabba's Palace) — the two SWBF2 Extraction maps — so the id is inferred, not name-verified. A 2026-09-09 capture confirmed a Mode5 round on Kessel emits `Mode5_Outro_Team<N>` (KyberMatchWatch reads the winner from it). GCW space-lane battles used to use sequel-era capital-ship co-op maps (COOP_NT_MC85 / COOP_NT_FOSD) — removed 2026-09-10: they load First Order / Resistance factions, and SWBF2 has no GCW-era capital-ship co-op map at all. A GCW lane battle is now a Blast on one of the two adjacent planets (see _selection).",
+  "_selection": "KyberBridge.choose_map_key scores each planet entry: trigger 'fleet' (defender has a fleet) / 'garrison' (defender has none) / 'any'; optional held_by must equal request.defender. A HOME world (death_star_ii, hoth) is always Galactic Assault. A GCW space lane's map_pool is the *_blast keys of its two endpoint planets; the player picks one in the battle panel (Battle.Request.lane_map_key), default the first that resolves. Kessel garrison-only: Empire-held -> CO-OP (spice mines), Rebel-held -> Extraction; a defending fleet there -> Blast.",
+  "schema_verified": true,
+  "maps": [
+	{
+	  "key": "dsii_ga",
+	  "planet": "death_star_ii",
+	  "trigger": "any",
+	  "mode": "galactic_assault",
+	  "display_name": "Death Star II — Galactic Assault",
+	  "frostbite_mode": "PlanetaryBattles",
+	  "level_path": "Levels/MP/DeathStar02_01/DeathStar02_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "dsii_blast",
+	  "planet": "death_star_ii",
+	  "trigger": "lane",
+	  "mode": "blast",
+	  "display_name": "Death Star II — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "Levels/MP/DeathStar02_01/DeathStar02_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "hoth_ga",
+	  "planet": "hoth",
+	  "trigger": "any",
+	  "mode": "galactic_assault",
+	  "display_name": "Hoth — Galactic Assault",
+	  "frostbite_mode": "PlanetaryBattles",
+	  "level_path": "Levels/MP/Hoth_01/Hoth_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "hoth_blast",
+	  "planet": "hoth",
+	  "trigger": "lane",
+	  "mode": "blast",
+	  "display_name": "Hoth — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "Levels/MP/Hoth_01/Hoth_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "endor_ga",
+	  "planet": "endor",
+	  "trigger": "any",
+	  "held_by": "empire",
+	  "mode": "galactic_assault",
+	  "display_name": "Endor — Galactic Assault",
+	  "frostbite_mode": "PlanetaryBattles",
+	  "level_path": "Levels/MP/Endor_01/Endor_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "endor_blast",
+	  "planet": "endor",
+	  "trigger": "any",
+	  "held_by": "rebellion",
+	  "mode": "blast",
+	  "display_name": "Endor — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "Levels/MP/Endor_01/Endor_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "scarif_supremacy",
+	  "planet": "scarif",
+	  "trigger": "any",
+	  "mode": "supremacy",
+	  "display_name": "Scarif — Supremacy",
+	  "frostbite_mode": "Mode1",
+	  "level_path": "S9_3/Scarif/Levels/MP/Scarif_02/Scarif_02",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "scarif_coop",
+	  "planet": "scarif",
+	  "trigger": "garrison",
+	  "held_by": "empire",
+	  "mode": "coop",
+	  "display_name": "Scarif — CO-OP",
+	  "frostbite_mode": "Mode9",
+	  "level_path": "S9_3/Scarif/Levels/MP/Scarif_02/Scarif_02",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "kessel_coop",
+	  "planet": "kessel",
+	  "trigger": "garrison",
+	  "held_by": "empire",
+	  "mode": "coop",
+	  "display_name": "Kessel — Spice Mines (CO-OP)",
+	  "frostbite_mode": "Mode9",
+	  "level_path": "S3/Levels/Kessel_01/Kessel_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "kessel_extraction",
+	  "planet": "kessel",
+	  "trigger": "garrison",
+	  "held_by": "rebellion",
+	  "mode": "extraction",
+	  "display_name": "Kessel — Extraction",
+	  "frostbite_mode": "Mode5",
+	  "level_path": "S3/Levels/Kessel_01/Kessel_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "kessel_blast",
+	  "planet": "kessel",
+	  "trigger": "fleet",
+	  "mode": "blast",
+	  "display_name": "Kessel — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "S3/Levels/Kessel_01/Kessel_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "yavin_blast",
+	  "planet": "yavin_iv",
+	  "trigger": "any",
+	  "mode": "blast",
+	  "display_name": "Yavin 4 — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "Levels/MP/Yavin_01/Yavin_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "yavin_ga",
+	  "planet": "yavin_iv",
+	  "trigger": "garrison",
+	  "held_by": "rebellion",
+	  "mode": "galactic_assault",
+	  "display_name": "Yavin 4 — Galactic Assault",
+	  "frostbite_mode": "PlanetaryBattles",
+	  "level_path": "Levels/MP/Yavin_01/Yavin_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "tatooine_supremacy",
+	  "planet": "tatooine",
+	  "trigger": "fleet",
+	  "mode": "supremacy",
+	  "display_name": "Tatooine — Supremacy",
+	  "frostbite_mode": "Mode1",
+	  "level_path": "S9_3/Tatooine_02/Tatooine_02",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "tatooine_ga",
+	  "planet": "tatooine",
+	  "trigger": "garrison",
+	  "held_by": "rebellion",
+	  "mode": "galactic_assault",
+	  "display_name": "Tatooine — Galactic Assault",
+	  "frostbite_mode": "PlanetaryBattles",
+	  "level_path": "Levels/MP/Tatooine_01/Tatooine_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "tatooine_coop",
+	  "planet": "tatooine",
+	  "trigger": "garrison",
+	  "held_by": "empire",
+	  "mode": "coop",
+	  "display_name": "Tatooine — Jabba's Palace (CO-OP)",
+	  "frostbite_mode": "Mode9",
+	  "level_path": "S2_2/Levels/JabbasPalace_01/JabbasPalace_01",
+	  "team_one_faction": "rebellion"
+	},
+	{
+	  "key": "tatooine_blast",
+	  "planet": "tatooine",
+	  "trigger": "lane",
+	  "mode": "blast",
+	  "display_name": "Tatooine — Blast",
+	  "frostbite_mode": "Blast",
+	  "level_path": "Levels/MP/Tatooine_01/Tatooine_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "bespin_blast",
+	  "planet": "bespin",
+	  "trigger": "any",
+	  "mode": "blast",
+	  "display_name": "Bespin — Cloud City (Blast)",
+	  "frostbite_mode": "Blast",
+	  "level_path": "S2/Levels/CloudCity_01/CloudCity_01",
+	  "team_one_faction": "rebellion"
+	},
+
+	{
+	  "key": "scarif_supremacy_lane",
+	  "planet": "scarif",
+	  "trigger": "lane",
+	  "mode": "supremacy",
+	  "display_name": "Scarif Beach — Supremacy",
+	  "frostbite_mode": "Mode1",
+	  "level_path": "S9_3/Scarif/Levels/MP/Scarif_02/Scarif_02",
+	  "team_one_faction": "rebellion",
+	  "_note": "Scarif has no verified Blast in the rotation export, so a Scarif-side lane battle uses its verified Supremacy map instead of a Blast."
+	},
+	{
+	  "key": "coop_mc85_defend",
+	  "mode": "coop",
+	  "coop_role": "defend",
+	  "display_name": "Rebel MC85 Star Cruiser — Co-Op Defense",
+	  "frostbite_mode": "ModeDefend",
+	  "level_path": "S9_3/COOP_NT_MC85/COOP_NT_MC85",
+	  "defender_faction": "rebellion",
+	  "team_one_faction": "rebellion",
+	  "trigger": "offline_lane",
+	  "_note": "Offline-only GCW space-lane battle (KYBER uses the lane's Blast). Same verified level as the sequel era's ship co-op; play it under the Original Era option (cross era)."
+	},
+	{
+	  "key": "coop_mc85_attack",
+	  "mode": "coop",
+	  "coop_role": "attack",
+	  "display_name": "Rebel MC85 Star Cruiser — Co-Op Attack",
+	  "frostbite_mode": "Mode9",
+	  "level_path": "S9_3/COOP_NT_MC85/COOP_NT_MC85",
+	  "defender_faction": "rebellion",
+	  "team_one_faction": "rebellion",
+	  "trigger": "offline_lane",
+	  "_note": "Offline-only GCW space-lane battle (KYBER uses the lane's Blast). Same verified level as the sequel era's ship co-op; play it under the Original Era option (cross era)."
+	},
+	{
+	  "key": "coop_fosd_defend",
+	  "mode": "coop",
+	  "coop_role": "defend",
+	  "display_name": "Imperial Star Destroyer (First Order) — Co-Op Defense",
+	  "frostbite_mode": "ModeDefend",
+	  "level_path": "S9_3/COOP_NT_FOSD/COOP_NT_FOSD",
+	  "defender_faction": "empire",
+	  "team_one_faction": "rebellion",
+	  "trigger": "offline_lane",
+	  "_note": "Offline-only GCW space-lane battle (KYBER uses the lane's Blast). Same verified level as the sequel era's ship co-op; play it under the Original Era option (cross era)."
+	},
+	{
+	  "key": "coop_fosd_attack",
+	  "mode": "coop",
+	  "coop_role": "attack",
+	  "display_name": "Imperial Star Destroyer (First Order) — Co-Op Attack",
+	  "frostbite_mode": "Mode9",
+	  "level_path": "S9_3/COOP_NT_FOSD/COOP_NT_FOSD",
+	  "defender_faction": "empire",
+	  "team_one_faction": "rebellion",
+	  "trigger": "offline_lane",
+	  "_note": "Offline-only GCW space-lane battle (KYBER uses the lane's Blast). Same verified level as the sequel era's ship co-op; play it under the Original Era option (cross era)."
+	}
+  ]
+}
