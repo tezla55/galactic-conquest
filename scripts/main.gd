@@ -86,6 +86,10 @@ var _coop_result_armed := false
 ## victory/outro can finish. GC must NOT also schedule its shorter result-driven restart:
 ## that 2.5 s restart tears the level down mid-outro and crashes the game.
 var _groundwin_restart_owned := false
+## Battle id whose capital-ship phase is waiting for the delayed `groundwin`. Prevents a
+## second ship-phase log line from scheduling another end trigger, and lets a new battle /
+## manual result cancel it.
+var _groundwin_pending_battle_id := ""
 var _last_link_status: int = -1      ## Redraw the panel when the link connects / drops.
 var _kyber_play_button: Button
 var _kyber_connect_button: Button
@@ -3610,6 +3614,7 @@ func _reset_kyber_battle_state() -> void:
 	_coop_result_unlock_ms = 0
 	_coop_result_armed = false
 	_groundwin_restart_owned = false
+	_groundwin_pending_battle_id = ""
 	_kyber_watch.disarm()
 
 
@@ -5896,18 +5901,39 @@ func _skip_capital_ship_phase(boarded_faction: StringName) -> void:
 	var pb := state.get_planet(StringName(state.pending_battle.get("planet_id", &"")))
 	if pb != null and not pb.capturable:
 		return   # a space-lane battle IS the capital-ship co-op — there's no ground phase
+	var battle_id := String(state.pending_battle.get("id", ""))
+	if _groundwin_pending_battle_id == battle_id:
+		return   # already scheduled for this battle
+	_groundwin_pending_battle_id = battle_id
 	var ground_winner := Faction.opponent(boarded_faction)
-	var winner_team := 1 if _pending_team_one() == ground_winner else 2
-	GcLog.note("battle", "capital-ship phase starting — %s ship boarded, ending for %s (team %d)" % [
-		Faction.display_name(boarded_faction), Faction.display_name(ground_winner), winner_team])
-	if _kyber_link.send_line("groundwin %d" % winner_team):
-		# The plugin arms its own 10 s `Restart` here. Do not let GC's result-driven
-		# 2.5 s restart preempt it: that is what tears down the level mid-outro and
-		# crashes in the listener cleanup (CrashDump 2026-11-02 09.46.34).
-		_groundwin_restart_owned = true
-		_notice = "%s won the ground phase — ending the match (skipping the capital-ship phase)." % \
-			Faction.short_name(ground_winner)
-		_refresh()
+	GcLog.note("battle", "capital-ship phase starting — %s ship boarded; delaying groundwin %.1fs so the ship sub-level can finish loading" % [
+		Faction.display_name(boarded_faction), GROUNDWIN_DELAY_S])
+	_notice = "Ship phase starting — ending the match once the ship level finishes loading…"
+	_refresh()
+	get_tree().create_timer(GROUNDWIN_DELAY_S).timeout.connect(func():
+		if not is_instance_valid(self) or _kyber_link == null or not _kyber_link.is_online():
+			return
+		if _groundwin_pending_battle_id != battle_id:
+			return
+		_groundwin_pending_battle_id = ""
+		if not state.has_pending_battle() or String(state.pending_battle.get("id", "")) != battle_id:
+			return
+		if not _kyber_staged.is_empty():
+			return   # a result already landed; don't end a finished match
+		var current_planet := state.get_planet(StringName(state.pending_battle.get("planet_id", &"")))
+		if current_planet != null and not current_planet.capturable:
+			return
+		var winner_team := 1 if _pending_team_one() == ground_winner else 2
+		GcLog.note("battle", "delayed groundwin -> team %d (%s) after the ship sub-level load" % [
+			winner_team, Faction.display_name(ground_winner)])
+		if _kyber_link.send_line("groundwin %d" % winner_team):
+			# The plugin arms its own 10 s `Restart` here. Do not let GC's result-driven
+			# 2.5 s restart preempt it: that tears the level down mid-outro and crashes in
+			# the listener cleanup (CrashDump 2026-11-02 09.46.34).
+			_groundwin_restart_owned = true
+			_notice = "%s won the ground phase — ending the match (skipping the capital-ship phase)." % \
+				Faction.short_name(ground_winner)
+			_refresh())
 
 
 func _on_kyber_play_pressed() -> void:
@@ -6026,6 +6052,7 @@ func _on_kyber_play_pressed() -> void:
 	_kyber_link.clear_level()
 	_kyber_match_live = false
 	_groundwin_restart_owned = false
+	_groundwin_pending_battle_id = ""
 	var level_path := String(params["level_path"])
 
 	if _kyber_link.load_level(level_path, String(params["frostbite_mode"]),
@@ -6294,6 +6321,12 @@ func _result_chat_line() -> String:
 	return "%s holds %s — the assault is repelled." % [who, place]
 
 
+const GROUNDWIN_DELAY_S := 8.0
+## Live 2026-11-02: the capital-ship sub-level streams its Venator/Dreadnought bundles for
+## ~3-3.5 s. Firing `groundwin` 54 ms after the Venator line crashed the game ~4.8 s later
+## during that sub-level load/cleanup (the same bad 0x100597302 list pointer appeared with
+## no Restart involved). Wait until the ship phase has finished loading before sending the
+## end trigger, so `Kyber.endgameteam<N>` no longer races the transition.
 const MATCH_RESTART_DELAY_S := 2.5
 ## `2026-10-08` (playtest 104, item 14): Blast has no round-end signal at all — the plugin's
 ## `emit_result` fires the INSTANT a team's 100th kill lands (__init__.lua, BLAST_KILL_TARGET),
@@ -7748,6 +7781,7 @@ func _refresh() -> void:
 		_coop_result_unlock_ms = 0
 		_coop_result_armed = false
 		_groundwin_restart_owned = false
+		_groundwin_pending_battle_id = ""
 		_kyber_watch.disarm()
 
 	if state.has_pending_battle():
