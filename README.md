@@ -1,12 +1,12 @@
 # Star Wars Battlefront II (2017) Galactic Conquest
 
-![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/SWBF2_GC_Logo.png "Galactic Conquest Logo")
+![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/images/SWBF2_GC_Logo.png "Galactic Conquest Logo")
 
 ## A strategic campaign layer for use with STAR WARS Battlefront II (2017). 
 
 Taking inspiration from the original STAR WARS Battlefront II (2005), this mod implements a similar full-on strategy game outside of matches where you take control of a faction, build your fleets, and fight for control of planets. When you or the enemy faction come into contact with each other, battles are fought and resolved in real Battlefront II matches played and controlled through [KYBER](https://kyber.gg) or set up by hand in Offline mode using an [Instant Action mod](https://www.nexusmods.com/starwarsbattlefront22017/mods/13320). 
 
-![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/GC_Map_Screenshot.png "Galactic Conquest Screenshot")
+![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/images/GC_Map_Screenshot.png "Galactic Conquest Screenshot")
 
 There are three campaigns: **Clone Wars**, **Galactic Civil War**, and the **Sequel Era**.
 Play solo against an AI opponent, online with friends (experimental), or split-screen co-op locally (requires [a split-screen mod](https://www.nexusmods.com/starwarsbattlefront22017/mods/719)), and choose between Easy, Normal, and Hard difficulties (affects AI credits and behavior).
@@ -15,7 +15,7 @@ In Single-Player mode, the enemy faction is controlled by the AI, and all battle
 
 The Galactic Conquest program was built from the ground up in Godot and is packaged as a standalone .exe. It also has controller support built in, but you will still need to switch windows to BF2 using a keyboard and mouse.
 
-![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/Tatooine_Battle_Screenshot.png "Tatooine Battle Screenshot")
+![alt text](https://github.com/tezla55/galactic-conquest/blob/code-only/images/Tatooine_Battle_Screenshot.png "Tatooine Battle Screenshot")
 
 # An Automated Galactic Conquest Campaign
 KYBER is recommended for full functionality. Galactic Conquest uses a KYBER plugin to switch maps, set modes, adjust bot counts, set bot difficulty, and read match results directly to your campaign. There are a few limitations to this implementation which are detailed below.
