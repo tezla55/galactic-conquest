@@ -50,7 +50,23 @@ This mod was made with the assistance of Claude. That being said, every build wa
 - Download the latest .exe from [releases](https://github.com/tezla55/galactic-conquest/releases) and run it. The program will guide you through the rest of setup.
 
 # Credits
-Starkiller Base model — [GrizzleSyrens](https://sketchfab.com/grizzlesyrens)
+
+**Models**
+- Starkiller Base — [GrizzleSyrens](https://sketchfab.com/grizzlesyrens)
+- Imperial-class Star Destroyer — [Heataker](https://sketchfab.com/Heataker)
+- Mon Calamari cruiser — [StarWars-Universe](https://sketchfab.com/SWU)
+- Republic Venator-class Star Destroyer — [Commander Cody](https://sketchfab.com/CaptainMiguel)
+- Death Star II — [N8](https://sketchfab.com/nathanmlange)
+
+**Planet and sky textures**
+- Hoth, Endor, Felucia, Geonosis, and Kashyyyk — [Darth Vader666](https://www.moddb.com/members/darthvader666)
+- Scarif — [northlogic](https://sketchfab.com/northlogicvfx) (*Dark Water Planet — 8K Textures*)
+- Tatooine and Jakku — [Rob Tuytel / Poly Haven](https://polyhaven.com/a/aerial_beach_02) (*aerial_beach_02*, CC0)
+- Naboo — [Shiny Man](https://shinyman.artstation.com) (*Exotic Planet 01*)
+- Takodana — [Shiny Man](https://shinyman.artstation.com) (*Terran Planet 09*)
+- Bespin, Yavin 4, and Kessel — [Screaming Brain Studios](https://screamingbrainstudios.com/) (*Planet Texture Pack*, CC0)
+- Kamino and the starfield backdrop — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0)
+- Milky Way galaxy texture — NASA/JPL-Caltech/R. Hurt (SSC), public domain
 
 
 > **Code-only repository.** Bulk planet art (`ui/art/`), 3D models (`3D/`), UI star photos
