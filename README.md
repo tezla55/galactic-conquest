@@ -68,6 +68,9 @@ This mod was made with the assistance of Claude. That being said, every build wa
 - Kamino and the starfield backdrop — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0)
 - Milky Way galaxy texture — NASA/JPL-Caltech/R. Hurt (SSC), public domain
 
+## Enjoyed the mod?
+Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
+
 
 > **Code-only repository.** Bulk planet art (`ui/art/`), 3D models (`3D/`), UI star photos
 > (`ui/Stars/`), sounds not tracked here since they are made by other people. Packaged builds
