@@ -36,6 +36,11 @@ When two fleets converge in space between planets, **Co-op Attack/Defend** match
 - Launch the .exe file. While setting up a campaign, it will launch KYBER with a custom plugin.
 - Host a server in KYBER with the mods you want.
 
+## Gameplay Trailer
+
+[<img src="https://img.youtube.com/vi/PfLsJJVASlo/maxresdefault.jpg" width="1280" height="720"
+/>](https://www.youtube.com/embed/PfLsJJVASlo)
+
 # Limitations
 - Galactic Conquest is able to control your server through KYBER, but it is unable to start a server. Before you start any battle, **you must Host a server with KYBER**. Once the server is up, Galactic Conquest will take control when you start a battle.
 - Co-op matches do not report results to the Galactic Conquest program. It will instead ask you for a result once the match is finished.
