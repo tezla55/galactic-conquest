@@ -42,9 +42,6 @@ When two fleets converge in space between planets, **Co-op Attack/Defend** match
 
 If the program isn't able to determine a match result for whatever reason, you can enable the "Show the More... KYBER debug menu" option in the Debug menu. This will give you the ability to manually select who won a match.
 
-# AI Disclaimer
-This mod was made with the assistance of Claude. That being said, every build was tested by a real human being with hands on a controller/keyboard. Game balance was adjusted manually by a human and every feature was implemented with a human in the loop reviewing, testing, and pushing back. Textures, models, and other elements were made by real human beings as well (see credits below).
-
 # Installation
 - Download and install [KYBER](https://kyber.gg) (unless you want to set up matches manually using [Instant Action](https://www.nexusmods.com/starwarsbattlefront22017/mods/13320)).
 - In KYBER, proceed to set up and and download either [Battlefront+](https://www.nexusmods.com/starwarsbattlefront22017/mods/7592) or [Instant Online Improvements](https://www.nexusmods.com/starwarsbattlefront22017/mods/3658) for bot support.
@@ -54,6 +51,9 @@ This mod was made with the assistance of Claude. That being said, every build wa
 
 ## Enjoyed the mod?
 Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
+
+# AI Disclaimer
+This mod was made with the assistance of Claude. That being said, every build was tested by a real human being with hands on a controller/keyboard. Game balance was adjusted manually by a human and every feature was implemented with a human in the loop reviewing, testing, and pushing back. Textures, models, and other elements were made by real human beings as well (see credits below).
 
 # Credits
 
