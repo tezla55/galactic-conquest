@@ -29,6 +29,13 @@ This mod, in an effort to add variety and flow to the campaign, uses a combinati
 ## Space Battles
 When two fleets converge in space between planets, **Co-op Attack/Defend** matches will play out, with the attacker boarding the defender's capitol ship to destroy it (Excludes Galactic Civil War campaign, see below).
 
+# Installation
+- Download and install [KYBER](https://kyber.gg) (unless you want to set up matches manually using [Instant Action](https://www.nexusmods.com/starwarsbattlefront22017/mods/13320)).
+- In KYBER, proceed to set up and and download either [Battlefront+](https://www.nexusmods.com/starwarsbattlefront22017/mods/7592) or [Instant Online Improvements](https://www.nexusmods.com/starwarsbattlefront22017/mods/3658) for bot support.
+- Download the latest .exe from [releases](https://github.com/tezla55/galactic-conquest/releases) and run it.
+- Launch the .exe file. While setting up a campaign, it will launch KYBER with a custom plugin.
+- Host a server in KYBER with the mods you want.
+
 # Limitations
 - Galactic Conquest is able to control your server through KYBER, but it is unable to start a server. Before you start any battle, **you must Host a server with KYBER**. Once the server is up, Galactic Conquest will take control when you start a battle.
 - Co-op matches do not report results to the Galactic Conquest program. It will instead ask you for a result once the match is finished.
@@ -41,13 +48,6 @@ When two fleets converge in space between planets, **Co-op Attack/Defend** match
 - Probably some bugs and crashes. Sometimes KYBER may not load your server with mods and you will need to reset it, etc. etc.
 
 If the program isn't able to determine a match result for whatever reason, you can enable the "Show the More... KYBER debug menu" option in the Debug menu. This will give you the ability to manually select who won a match.
-
-# Installation
-- Download and install [KYBER](https://kyber.gg) (unless you want to set up matches manually using [Instant Action](https://www.nexusmods.com/starwarsbattlefront22017/mods/13320)).
-- In KYBER, proceed to set up and and download either [Battlefront+](https://www.nexusmods.com/starwarsbattlefront22017/mods/7592) or [Instant Online Improvements](https://www.nexusmods.com/starwarsbattlefront22017/mods/3658) for bot support.
-- Download the latest .exe from [releases](https://github.com/tezla55/galactic-conquest/releases) and run it.
-- Launch the .exe file. While setting up a campaign, it will launch KYBER with a custom plugin.
-- Host a server in KYBER with the mods you want.
 
 ## Enjoyed the mod?
 Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
