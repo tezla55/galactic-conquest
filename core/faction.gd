@@ -38,6 +38,14 @@ static func display_name(faction: StringName) -> String:
 	return "Unknown"
 
 
+## The name used in a sentence: "Rebel Alliance attacks Endor", "Rebel Alliance wins…".
+## `short_name` is for tight UI labels, where "Rebels" is fine, but "Rebels attacks" is a
+## plural/singular mismatch. Only the Rebellion differs; every other short name is singular
+## already (CIS, Empire, Republic, First Order, Resistance).
+static func sentence_name(faction: StringName) -> String:
+	return "Rebel Alliance" if faction == REBELLION else short_name(faction)
+
+
 ## The one-word name for tight UI (status line, battle labels). NOT
 ## `display_name().split(" ")[-1]` — that turns both "Separatist Alliance" and "Rebel
 ## Alliance" into "Alliance", which reads wrong for the CIS in a Clone Wars context.

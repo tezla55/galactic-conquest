@@ -11,6 +11,7 @@ extends RefCounted
 
 const CONE_DOT := 0.25       ## prefer a candidate at most ~75 degrees off the stick
 const HALF_PLANE_DOT := 0.0  ## fallback: anything in front of the stick
+const ANGLE_TIE := 0.05      ## radians (~3 degrees): within this, the nearer world wins
 
 var current_id: StringName = &""
 
@@ -48,7 +49,8 @@ static func next_id(positions: Dictionary, current_id: StringName, direction: Ve
 static func _best_in_cone(positions: Dictionary, current_id: StringName, origin: Vector2,
 		dir: Vector2, minimum_dot: float) -> StringName:
 	var best: StringName = &""
-	var best_score := INF
+	var best_angle := INF
+	var best_dist := INF
 	for key in positions:
 		if key == current_id:
 			continue
@@ -59,13 +61,21 @@ static func _best_in_cone(positions: Dictionary, current_id: StringName, origin:
 		var dot := delta.normalized().dot(dir)
 		if dot < minimum_dot:
 			continue
-		# Distance matters, but an off-axis candidate should lose to a nearer one that is
-		# more directly in front of the stick.
-		var score := dist * (1.0 + 0.9 * (1.0 - dot))
-		if score < best_score - 0.0001:
-			best_score = score
-			best = key
-		elif is_equal_approx(score, best_score) and String(key) < String(best):
+		# Direction decides: the candidate closest to the exact angle of the stick wins, so
+		# pushing straight at a world selects it even when a nearer one sits 45 degrees off.
+		# Distance only breaks a (near-)tie between candidates in the same direction.
+		var angle := acos(clampf(dot, -1.0, 1.0))
+		var better := false
+		if angle < best_angle - ANGLE_TIE:
+			better = true
+		elif angle <= best_angle + ANGLE_TIE:
+			if dist < best_dist - 0.0001:
+				better = true
+			elif is_equal_approx(dist, best_dist) and String(key) < String(best):
+				better = true
+		if better:
+			best_angle = angle
+			best_dist = dist
 			best = key
 	return best
 

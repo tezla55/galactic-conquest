@@ -78,3 +78,5 @@ Feel free to [buy me a coffee :)](https://buymeacoffee.com/drtezla)
 > **Code-only repository.** Bulk planet art (`ui/art/`), 3D models (`3D/`), UI star photos
 > (`ui/Stars/`), sounds not tracked here since they are made by other people. Packaged builds
 > are attached to GitHub Releases.
+
+*Galactic Conquest is an unofficial, non-commercial fan project. It is not affiliated with, endorsed by, or sponsored by Lucasfilm, Disney, Electronic Arts, DICE, or KYBER. STAR WARS and related names are trademarks of their respective owners.*

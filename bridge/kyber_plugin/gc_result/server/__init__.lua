@@ -10,7 +10,7 @@
 --   humanteam <1|2>                                              move human player(s) onto this team (faction the player runs in GC) — single player / local hotseat, where there's only ever one physical player
 --   teamid <playerId> <1|2|0>                                    pin ONE specific human (by EA id, from KYBER's own "<name> (<id>) successfully authenticated" log line) to a team, or 0 to un-pin — for ONLINE two-player, where a real human sits on both teams and one shared value can't express that; call once per known player, checked before `humanteam`
 --   coopdef <1|2>                                                CO-OP: this team wins if the mission ends with no score (attackers failed)
---   stopeor <0|1>                                                Whiteshark.StopEOR — 0 (default) lets the natural end-of-round run so Level:Complete fires; 1 suppresses it (and the round-end signal)
+--   stopeor <0|1|auto>                                          Whiteshark.StopEOR - auto (default) = ON only for capital-ship Supremacy (Mode1), OFF elsewhere (natural EOR); 1/0 override the next load
 --   settings [name]                                              dump a Console.GetSettings object's fields; no arg = hunt list
 --   diff <aimT1> [aimT2]                                         AutoPlayers.AimNoiseScaleTeam1 / Team2 (lower = deadlier)
 --   say <text>                                                   broadcast one line into the match chat (campaign briefing / result)
@@ -71,7 +71,7 @@
 --     Until one lands, Supremacy/GA -> winner 0 -> GC's manual buttons.
 --   * "Broadcast <msg>" is the only Lua chat.
 
-local PLUGIN_BUILD = "2026-10-30e"  -- bump on every change; GC logs a mismatch so a stale
+local PLUGIN_BUILD = "2026-11-03a"  -- bump on every change; GC logs a mismatch so a stale
                                    -- plugin (KYBER not relaunched from GC) is obvious.
                                    -- '2026-09-18a': groundwin now follows Kyber.endgameteam<N>
                                    -- with a delayed native Restart (ground_restart_pending) —
@@ -339,7 +339,26 @@ end
 -- load but no Lua event), and KYBER got less stable. So it's back ON by default. The
 -- round-end signal has to come from somewhere else — see the Bundle event sweep + the
 -- LookupDataContainer probes. `stopeor 0|1` still toggles it live. docs/SUPREMACY_PHASE.md.
-local stop_eor = true
+-- 2026-11-03: StopEOR is per MODE and per CAMPAIGN, not global. Clone Wars / Sequel Era
+-- Supremacy (Mode1) is the only match with the capital-ship phase, and its natural
+-- end-of-round is the crash path (docs/SUPREMACY_PHASE.md), so it keeps StopEOR ON -
+-- the v33 playtest showed that is stable and
+-- restores the victory/defeat screen. `stopeor 0|1` overrides the mode default for the
+-- next load (GC sends it per battle); `stopeor auto` returns to the mode default.
+local stop_eor_override = nil
+
+local function eor_suppressed()
+	if stop_eor_override ~= nil then
+		return stop_eor_override
+	end
+	return managed_mode == "Mode1"
+end
+
+local function apply_stop_eor()
+	local on = eor_suppressed()
+	Console.Execute("Whiteshark.StopEOR " .. (on and "true" or "false"))
+	print("gc_result: Whiteshark.StopEOR " .. (on and "true (capital-ship Supremacy)" or "false (natural EOR - " .. (managed_mode ~= "" and managed_mode or "pre-load") .. ")"))
+end
 
 local function run_start_cmds(pre_load)
 	if pre_load == nil then pre_load = false end
@@ -350,7 +369,7 @@ local function run_start_cmds(pre_load)
 	for _, c in ipairs(cmds) do
 		Console.Execute(c)
 	end
-	Console.Execute("Whiteshark.StopEOR " .. (stop_eor and "true" or "false"))
+	apply_stop_eor()
 end
 
 -- --- tiny JSON writer: flat, strings + numbers only ---------------------------
@@ -1051,10 +1070,13 @@ local function handle_command(line)
 		print("gc_result: coop defender team -> " .. tostring(coop_defender))
 	elseif verb == "stopeor" then
 		local v = tostring(a[1] or "")
-		stop_eor = (v == "1" or v == "true")
-		Console.Execute("Whiteshark.StopEOR " .. (stop_eor and "true" or "false"))
-		print("gc_result: Whiteshark.StopEOR -> " .. tostring(stop_eor)
-			.. (stop_eor and " (natural EOR suppressed — no round-end signal)" or " (natural EOR runs — Level:Complete should fire; crash may follow)"))
+		if v == "auto" or v == "" then
+			stop_eor_override = nil
+		else
+			stop_eor_override = (v == "1" or v == "true")
+		end
+		apply_stop_eor()
+		print("gc_result: StopEOR override -> " .. (stop_eor_override == nil and "auto (capital-ship Supremacy only)" or tostring(stop_eor_override)))
 	elseif verb == "settings" then
 		if a[1] then settings_dump(a[1]) else for _, n in ipairs(SETTINGS_HUNT) do settings_dump(n) end end
 	elseif verb == "probe" then

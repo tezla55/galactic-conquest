@@ -53,3 +53,6 @@ bridge/kyber_mod/reference/vanilla/*.bin
 /sound/
 /Playtest notes*.txt
 /TEAM_PREQ_MODE1.txt
+
+# Audio is not part of the open-source repo.
+/sound/

@@ -19,11 +19,14 @@ const RECONNECT_INTERVAL_MS := 3000
 ## Must match PLUGIN_BUILD in bridge/kyber_plugin/gc_result/server/__init__.lua. If the
 ## connected plugin reports a different build the user is running a stale copy — KYBER was
 ## not (re)launched from GC after the plugin changed. Bump both together.
-const EXPECTED_PLUGIN_BUILD := "2026-10-30e"
+const EXPECTED_PLUGIN_BUILD := "2026-11-03a"
 
 var status: int = Status.OFFLINE
 var last_level: Dictionary = {}
-var last_result: Dictionary = {}   ## Most recent gc_result seen (kept for the fixture button).
+var last_result: Dictionary = {}   ## Most recent gc_result seen (diagnostics).
+## The build string the connected plugin reported in its `hello`, or "" before one arrives.
+## A mismatch means KYBER is still running a plugin packaged by an older GC build.
+var plugin_build: String = ""
 
 ## Non-result control messages from the plugin (load_ack / load_failed), FIFO. main.gd
 ## drains this each frame to drive the "did the battle actually load in SWBF2?" flow.
@@ -153,6 +156,17 @@ func restart_match() -> bool:
 	return send_line("restart")
 
 
+## Tell the plugin whether to suppress the natural end-of-round. Only the Clone Wars /
+## Sequel Era capital-ship Supremacy does; send it before `load` so the plugin applies it
+## with the rest of the start commands. `auto` hands the decision back to the plugin's mode.
+static func compose_stop_eor(on: bool) -> String:
+	return "stopeor %d" % (1 if on else 0)
+
+
+func set_stop_eor(on: bool) -> bool:
+	return send_line(compose_stop_eor(on))
+
+
 static func compose_teamid(player_id: int, team: int) -> String:
 	return "teamid %d %d" % [player_id, team]
 
@@ -255,6 +269,7 @@ func _handle_line(line: String) -> void:
 			# previous KYBER run would drop the new session's first result as a duplicate.
 			_last_seq = 0
 			var build := String(msg.get("build", "unknown"))
+			plugin_build = build
 			if build == EXPECTED_PLUGIN_BUILD:
 				GcLog.note("kyber", "plugin connected (build %s)" % build)
 			else:

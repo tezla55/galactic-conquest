@@ -15,7 +15,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Galactic Conquest"
-config/description="A Clone Wars galactic campaign front end that drives battles through KYBER."
+config/version="1.0.0"
+config/description="A strategy campaign layer for STAR WARS Battlefront II (2017)."
 run/main_scene="uid://71gitj0ytgin"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.023529, 0.035294, 0.054902, 1)
@@ -37,6 +38,13 @@ import/blender/enabled=false
 [input_devices]
 
 pointing/emulate_mouse_from_touch=false
+
+[logging]
+
+; Release builds have no console. Keep Godot's own engine log next to gc.log so a user can
+; send both after a crash or a failed startup. Godot rotates this file on its own.
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/godot.log"
 
 [rendering]
 

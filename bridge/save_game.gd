@@ -29,10 +29,25 @@ static func save(slot: String, state: GalaxyState, dir := DIR) -> bool:
 		"two_player": state.two_player,
 		"state": state.to_dict(),
 	}
-	var f := FileAccess.open("%s/slot_%s.json" % [dir, slot], FileAccess.WRITE)
+	# Write to a temp file and replace only once the bytes are safely on disk. A crash or a
+	# full disk mid-write used to leave a truncated JSON file where a good save had been.
+	var final_path := "%s/slot_%s.json" % [dir, slot]
+	var tmp_path := final_path + ".tmp"
+	var f := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if f == null:
 		return false
 	f.store_string(JSON.stringify(payload))
+	f.flush()
+	var write_error := f.get_error()
+	f.close()
+	if write_error != OK:
+		DirAccess.remove_absolute(tmp_path)
+		return false
+	if FileAccess.file_exists(final_path):
+		DirAccess.remove_absolute(final_path)
+	if DirAccess.rename_absolute(tmp_path, final_path) != OK:
+		DirAccess.remove_absolute(tmp_path)
+		return false
 	return true
 
 

@@ -214,7 +214,7 @@
     },
     {
       "id": "crait_ajankloss_space_1",
-      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 1 of 3)",
+      "display_name": "Crait–Ajan Kloss hyperlane",
       "owner": "neutral",
       "capturable": false,
       "income": 0,
@@ -235,7 +235,7 @@
     },
     {
       "id": "crait_ajankloss_space_2",
-      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 2 of 3)",
+      "display_name": "Crait–Ajan Kloss hyperlane",
       "owner": "neutral",
       "capturable": false,
       "income": 0,
@@ -255,7 +255,7 @@
     },
     {
       "id": "crait_ajankloss_space_3",
-      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, 3 of 3)",
+      "display_name": "Crait–Ajan Kloss hyperlane",
       "owner": "neutral",
       "capturable": false,
       "income": 0,
@@ -276,7 +276,7 @@
     },
     {
       "id": "crait_ajankloss_space_2b",
-      "display_name": "Crait–Ajan Kloss hyperlane (outer arc, alternate route)",
+      "display_name": "Crait–Ajan Kloss hyperlane",
       "owner": "neutral",
       "capturable": false,
       "income": 0,

@@ -3,6 +3,10 @@ extends Control
 ## The galactic map. It reads GalaxyState and calls TurnResolver; it decides nothing
 ## about who wins, what a planet is worth, or how a battle is configured.
 
+## Shown on the start screen and written into the support log. Keep in step with
+## project.godot's `config/version` and the Windows file/product version in the export.
+const GC_VERSION := "1.0.0"
+
 var state: GalaxyState
 var selected_fleet: Fleet = null
 var pending_dest: StringName = &""
@@ -112,12 +116,16 @@ var _restart_battle_button: Button   ## More…: re-send `restart` to KYBER for 
 ## hides _more_button entirely for that case.
 var _log_modal: Control
 var _log_text: TextEdit
-var _hero_asset_edit: LineEdit
 var _grpc_cmd_edit: LineEdit
 var _log_shown_count: int = -1
 var _difficulty_modal: Control
 var _start_screen: Control
 var _victory_modal: Control
+var _offline_briefing_modal: Control
+## Always-on battle-row button while an offline battle is pending. The panel's inline
+## "[url]Show setup details[/url]" link is easy to lose once the message area is rebuilt;
+## this is the reliable way back into the same popup.
+var _offline_setup_button: Button
 ## Which victor the popup has already been shown for — guards against _refresh (called on
 ## lots of unrelated clicks, not just once) reopening a modal the player closed on purpose.
 ## Reset alongside starting a fresh campaign so its own eventual outcome shows again.
@@ -851,6 +859,9 @@ var _theme_button_hover: StyleBoxFlat
 
 
 func _ready() -> void:
+	GcLog.enable_file_logging()
+	GcLog.note("gc", "Galactic Conquest %s — %s" % [GC_VERSION, OS.get_name()])
+	GcLog.note("gc", "user dir: %s" % OS.get_user_data_dir())
 	if DisplayServer.get_name() != "headless":
 		# A brand-new install (no user://display.cfg yet) starts maximized — friendlier than
 		# the fixed 1600×900 default on a real monitor. Once the player has set anything
@@ -2143,6 +2154,12 @@ func _is_gcw() -> bool:
 func _is_sequel() -> bool:
 	return state != null and state.campaign_id == &"sequel_era"
 
+## Only Clone Wars and Sequel Era Supremacy run the ground -> capital-ship phase. Galactic
+## Civil War Supremacy has no ship phase, so it uses the natural end-of-round like every
+## other mode.
+func _campaign_has_capital_ship_phase() -> bool:
+	return state != null and state.campaign_id in [&"clone_wars", &"sequel_era"]
+
 
 ## Whichever faction is "you" right now — the one whose fleets you can click, whose
 ## treasury the buy/reinforce buttons spend from, whose colour is blue, whose capital being
@@ -2436,7 +2453,7 @@ func _check_battle_intro() -> void:
 	var planet := state.get_planet(StringName(state.pending_battle.get("planet_id", &"")))
 	_battle_intro_end_ms = Time.get_ticks_msec() + BATTLE_INTRO_MS
 	_notice = "The %s attacks %s — a fleet has moved in." % [
-		Faction.short_name(attacker),
+		Faction.sentence_name(attacker),
 		planet.display_name if planet != null else "your world"]
 
 
@@ -2790,6 +2807,24 @@ func _checkbox_icon(checked: bool) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 
+## Godot draws a checked checkbox's hovered state with the theme's `hover_pressed` box, which
+## the project theme does not define - it falls back to the engine default and its different
+## content margins visibly slide the label sideways on hover. Give every state the same box so
+## the text cannot move; focus keeps a ring (with zero content margins) so keyboard/controller
+## users can still see where they are.
+func _stabilize_checkbox(cb: CheckBox) -> void:
+	for state: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		cb.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	var focus := StyleBoxFlat.new()
+	focus.draw_center = false
+	focus.border_color = Tokens.TEXT
+	focus.set_border_width_all(2)
+	focus.set_corner_radius_all(4)
+	for side in [SIDE_LEFT, SIDE_RIGHT, SIDE_TOP, SIDE_BOTTOM]:
+		focus.set_content_margin(side, 0)
+	cb.add_theme_stylebox_override("focus", focus)
+
+
 ## Both sides' insignia + worlds-held count. Called from _refresh (state changes) and on
 ## input-mode changes (hotseat can flip whose side this screen is).
 func _update_status_row() -> void:
@@ -2887,6 +2922,7 @@ func _build_panel() -> void:
 	_panel_body.add_theme_font_override("bold_font", Tokens.FONT_BOLD)
 	_panel_body.add_theme_font_size_override("normal_font_size", Tokens.FONT_SIZE_BASE)
 	_panel_body.add_theme_font_size_override("bold_font_size", Tokens.FONT_SIZE_BASE)
+	_panel_body.meta_clicked.connect(_on_panel_body_meta_clicked)
 	top_v.add_child(_panel_body)
 
 	# --- Top-right gear + Settings popup ----------------------------------
@@ -3006,6 +3042,15 @@ func _build_panel() -> void:
 	_kyber_apply_button.text = "Apply result"
 	_kyber_apply_button.pressed.connect(_on_kyber_apply_pressed)
 	_battle_box.add_child(_kyber_apply_button)
+
+	_offline_setup_button = Button.new()
+	_offline_setup_button.text = "Match settings"
+	_offline_setup_button.tooltip_text = ("Show the Arcade / Instant Action settings for this offline "
+		+ "battle.")
+	_offline_setup_button.pressed.connect(func():
+		_sfx_confirm()
+		_show_offline_briefing_modal())
+	_battle_box.add_child(_offline_setup_button)
 
 	_more_button = Button.new()
 	_more_button.text = "More…"
@@ -3838,6 +3883,25 @@ func _build_kyber_modal() -> void:
 	detect_button.text = "Detect"
 	detect_button.pressed.connect(_on_kyber_detect_pressed)
 	path_row.add_child(detect_button)
+	var browse_button := Button.new()
+	browse_button.text = "Browse…"
+	browse_button.tooltip_text = "Pick kyber_launcher.exe yourself if Detect can't find it."
+	browse_button.pressed.connect(func():
+		_sfx_move()
+		var dlg := FileDialog.new()
+		dlg.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+		dlg.access = FileDialog.ACCESS_FILESYSTEM
+		dlg.filters = PackedStringArray(["*.exe ; Executables"])
+		dlg.title = "Select kyber_launcher.exe"
+		dlg.current_file = "kyber_launcher.exe"
+		dlg.size = Vector2i(760, 520)
+		dlg.file_selected.connect(func(path: String):
+			_kyber_path_edit.text = path.replace("\\", "/")
+			_kyber_message = ""
+			_kyber_refresh())
+		overlay.add_child(dlg)
+		dlg.popup_centered())
+	path_row.add_child(browse_button)
 	col.add_child(path_row)
 
 	_kyber_status_label = Label.new()
@@ -3978,13 +4042,15 @@ func _on_log_pressed() -> void:
 
 
 func _build_log_modal() -> void:
-	var shell := _modal_overlay("Debug", Vector2(760, 620))
+	var shell := _modal_overlay("Debug", Vector2(860, 720))
 	var overlay: Control = shell["overlay"]
 	var col: VBoxContainer = shell["body"]
 
-	# `2026-10-08` (playtest 104, items 6/7): "Log" renamed to "Debug" — this panel already
-	# held KYBER protocol-probing buttons more than a plain activity log, so an experimental
-	# toggle belongs here too rather than in the normal New Game flow.
+	# `2026-10-08` (playtest 104, items 6/7): "Log" renamed to "Debug". `2026-11-03`: the
+	# one-shot protocol probes (settings dump, endofround, kit-limit probe, groundwin skip,
+	# hero kit) and the last-result fixture dump are gone - they were developer scaffolding,
+	# not something a player could use. What is left is the activity log, the experimental
+	# toggles, and the gRPC console.
 	var hotseat_toggle := CheckBox.new()
 	hotseat_toggle.text = "Enable 2 Player (hotseat) [experimental]"
 	hotseat_toggle.tooltip_text = "Adds \"2 Players (hotseat)\" back to the New Game wizard's player-count step."
@@ -4021,118 +4087,11 @@ func _build_log_modal() -> void:
 	_log_text = TextEdit.new()
 	_log_text.editable = false
 	_log_text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	_log_text.custom_minimum_size = Vector2(0, 380)
+	_log_text.custom_minimum_size = Vector2(0, 300)
 	_log_text.add_theme_font_size_override("font_size", 12)
 	col.add_child(_log_text)
 
 	if _kyber_link != null:
-		var diag_row := HBoxContainer.new()
-		diag_row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
-		var settings_button := Button.new()
-		settings_button.text = "Dump settings"
-		settings_button.tooltip_text = "Ask the plugin to dump the readable Frostbite settings objects (docs/SUPREMACY_PHASE.md)"
-		settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		settings_button.pressed.connect(func():
-			if _kyber_link.is_online(): _kyber_link.send_line("settings")
-			else: GcLog.note("kyber", "not linked — start a match first")
-			_sync_log_text(true))
-		diag_row.add_child(settings_button)
-		var testeor_button := Button.new()
-		testeor_button.text = "Test end-of-round"
-		testeor_button.tooltip_text = ("Diagnostic only — does NOT report a result. Sends "
-			+ "Console.Execute(\"endofround\"), a real native console command found in a "
-			+ "KYBER community plugin (GunGame). Only meaningful during a live managed match "
-			+ "— check the log after to see what it actually did.")
-		testeor_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		testeor_button.pressed.connect(func():
-			if _kyber_link.is_online(): _kyber_link.send_line("testeor")
-			else: GcLog.note("kyber", "not linked — start a match first")
-			_sync_log_text(true))
-		diag_row.add_child(testeor_button)
-		var probe_button := Button.new()
-		probe_button.text = "Probe kit limits"
-		probe_button.tooltip_text = ("Diagnostic only — does NOT report a result. Dumps the "
-			+ "kit-limitations gamemode container's real field names (ResourceManager."
-			+ "LookupDataContainer, docs/SUPREMACY_PHASE.md) — runs once per match. Only "
-			+ "meaningful during a live managed match — check the log after.")
-		probe_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		probe_button.pressed.connect(func():
-			if _kyber_link.is_online(): _kyber_link.send_line("probe")
-			else: GcLog.note("kyber", "not linked — start a match first")
-			_sync_log_text(true))
-		diag_row.add_child(probe_button)
-		col.add_child(diag_row)
-
-		# `groundwin` already exists and already fires Kyber.endgameteam<N> (a DICE
-		# ConsoleCommandTrigger, confirmed live to cleanly end a match) — today it's only
-		# ever sent reactively, once KyberMatchWatch sees a Clone Wars lane's capital-ship
-		# sub-level already streaming in. The user's question (2026-09-11): could the same
-		# trigger, fired proactively right at match start on a GENERAL Supremacy map (not
-		# just a Clone Wars lane), skip its ground/planetary phase entirely and drop straight
-		# into the capital-ship phase — which might carry its own Outro_Team<N> marker, unlike
-		# Supremacy's overall match (docs/SUPREMACY_PHASE.md: no ticket/score signal exists at
-		# all, only the slow rotation-advance one). Untested in both directions: whether firing
-		# this before any real ground fighting happened is safe (`SkipTitanPhase1` crashed on
-		# a re-fire; this is a different trigger, but "immediately at load" is a genuinely new
-		# situation for it), and whether the resulting phase actually emits Outro_Team<N> at
-		# all outside the two Clone Wars lane maps it's been observed on. No plugin change
-		# needed — `groundwin` is exactly the lever, just never given a manual UI trigger.
-		# Diagnostic only: does not touch match_armed/managing/emit_result (same as the
-		# buttons above), it only pulls the same trigger `_skip_capital_ship_phase` does.
-		var skip_ground_row := HBoxContainer.new()
-		skip_ground_row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
-		var skip_ground_label := Label.new()
-		skip_ground_label.text = "Test skip ground phase (CONFIRMED: crashes, 2026-09-11):"
-		skip_ground_label.add_theme_color_override("font_color", Tokens.TEXT_DIM)
-		skip_ground_row.add_child(skip_ground_label)
-		for team: int in [1, 2]:
-			var skip_button := Button.new()
-			skip_button.text = "Team %d wins ground" % team
-			skip_button.tooltip_text = ("CONFIRMED LIVE (2026-09-11): crashed the game — see "
-				+ "CLAUDE.md. Sends groundwin %d, declaring team %d the ground-phase winner "
-				+ "(fires Kyber.endgameteam%d, the same DICE ConsoleCommandTrigger the natural "
-				+ "Clone Wars lane flow fires once boarding starts on its own — but that's only "
-				+ "ever been verified safe fired AFTER real ground fighting concluded). Firing "
-				+ "it artificially, without the level's own blueprint having run through "
-				+ "whatever state it expects first, is not safe — left here only because a "
-				+ "narrower follow-up test (fire it later, once real fighting has happened) "
-				+ "might behave differently and is worth trying once, deliberately.") % [team, team, team]
-			skip_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var team_captured: int = team
-			skip_button.pressed.connect(func():
-				if _kyber_link.is_online(): _kyber_link.send_line("groundwin %d" % team_captured)
-				else: GcLog.note("kyber", "not linked — start a match first")
-				_sync_log_text(true))
-			skip_ground_row.add_child(skip_button)
-		col.add_child(skip_ground_row)
-
-		var hero_row := HBoxContainer.new()
-		hero_row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
-		_hero_asset_edit = LineEdit.new()
-		_hero_asset_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_hero_asset_edit.text = "Gameplay/Kits/Hero/DarthVader/Kit_Hero_DarthVader"
-		_hero_asset_edit.tooltip_text = ("A hero kit resource path, \"Gameplay/Kits/Hero/<Name>/"
-			+ "Kit_Hero_<Name>\" — the Vader path here is the only one confirmed working "
-			+ "(found live in a KYBER community plugin). Edit freely to try other names; "
-			+ "nothing else confirms they exist.")
-		hero_row.add_child(_hero_asset_edit)
-		var hero_button := Button.new()
-		hero_button.text = "Set hero kit"
-		hero_button.tooltip_text = ("Diagnostic only — does NOT report a result. Sends "
-			+ "Player:SetCustomizationAsset(path) to the first human found in the match. "
-			+ "Only meaningful during a live managed match.")
-		hero_button.pressed.connect(func():
-			var path := _hero_asset_edit.text.strip_edges()
-			if path.is_empty():
-				GcLog.note("kyber", "enter a hero asset path first")
-			elif _kyber_link.is_online():
-				_kyber_link.send_line("hero %s" % path)
-			else:
-				GcLog.note("kyber", "not linked — start a match first")
-			_sync_log_text(true))
-		hero_row.add_child(hero_button)
-		col.add_child(hero_row)
-
 		var grpc_head := Label.new()
 		grpc_head.text = "gRPC (experimental — bypasses the gc_result plugin entirely)"
 		grpc_head.add_theme_color_override("font_color", Tokens.TEXT)
@@ -4202,13 +4161,33 @@ func _build_log_modal() -> void:
 		grpc_cmd_row.add_child(grpc_cmd_button)
 		col.add_child(grpc_cmd_row)
 
+	# Support tools, not gameplay: the log file and a copyable summary are what a player can
+	# send when something on their machine didn't work. Kept separate from Clear/Close so they
+	# don't read as part of the normal flow.
+	var support_row := HBoxContainer.new()
+	support_row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
+	var logs_button := Button.new()
+	logs_button.text = "Open log folder"
+	logs_button.tooltip_text = "Opens the folder that holds gc.log and Godot's own log."
+	logs_button.pressed.connect(func():
+		_sfx_confirm()
+		DirAccess.make_dir_recursive_absolute(GcLog.LOG_DIR)
+		OS.shell_open(ProjectSettings.globalize_path(GcLog.LOG_DIR)))
+	support_row.add_child(logs_button)
+	var diag_button := Button.new()
+	diag_button.text = "Copy diagnostics"
+	diag_button.tooltip_text = "Version, paths, and plugin status — paste this into a bug report."
+	diag_button.pressed.connect(func():
+		_sfx_confirm()
+		if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+			DisplayServer.clipboard_set(_diagnostics_text())
+		GcLog.note("gc", "diagnostics copied to the clipboard")
+		_sync_log_text(true))
+	support_row.add_child(diag_button)
+	col.add_child(support_row)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
-	var save_button := Button.new()
-	save_button.text = "Save last result → fixture"
-	save_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	save_button.pressed.connect(_on_log_save_fixture_pressed)
-	row.add_child(save_button)
 	var clear_button := Button.new()
 	clear_button.text = "Clear"
 	clear_button.pressed.connect(func():
@@ -4237,19 +4216,27 @@ func _sync_log_text(force := false) -> void:
 	_log_text.scroll_vertical = _log_text.get_line_count()
 
 
-func _on_log_save_fixture_pressed() -> void:
-	if _kyber_link == null or _kyber_link.last_result.is_empty():
-		GcLog.note("gc", "no KYBER result to save yet — finish a match first")
-		_sync_log_text(true)
-		return
-	var f := FileAccess.open("user://gc_result_sample.json", FileAccess.WRITE)
-	if f == null:
-		GcLog.note("gc", "could not write the result fixture")
-	else:
-		f.store_string(JSON.stringify(_kyber_link.last_result) + "\n")
-		f.close()
-		GcLog.note("gc", "saved last result to user://gc_result_sample.json")
-	_sync_log_text(true)
+## One plain-text block for a bug report: what build is running, where its files are, and
+## whether the KYBER plugin is actually connected. No campaign state, no player names.
+func _diagnostics_text() -> String:
+	var s := KyberPluginInstaller.status()
+	var build := "not connected"
+	if _kyber_link != null and _kyber_link.plugin_build != "":
+		build = _kyber_link.plugin_build
+	var lines := PackedStringArray([
+		"Galactic Conquest %s" % GC_VERSION,
+		"%s %s" % [OS.get_name(), OS.get_version()],
+		"user dir: %s" % OS.get_user_data_dir(),
+		"launcher: %s (%s)" % [String(s["launcher_path"]),
+			"found" if bool(s["launcher_found"]) else "NOT found"],
+		"KYBER running: %s" % ("yes" if bool(s["kyber_running"]) else "no"),
+		"plugin packaged: %s" % ("yes" if bool(s["kbplugin_present"]) else "no"),
+		"GC link: %s" % ("online" if (_kyber_link != null and _kyber_link.is_online()) else "offline"),
+		"plugin build: %s (GC expects %s)" % [build, KyberLink.EXPECTED_PLUGIN_BUILD],
+		"gc log: %s" % GcLog.log_path(),
+		"godot log: user://logs/godot.log",
+	])
+	return "\n".join(lines)
 
 
 func _on_log_close_pressed() -> void:
@@ -4258,7 +4245,6 @@ func _on_log_close_pressed() -> void:
 	_log_modal = null
 	_log_text = null
 	_log_shown_count = -1
-	_hero_asset_edit = null
 	_grpc_cmd_edit = null
 
 
@@ -4459,6 +4445,12 @@ func _build_campaign_wizard(col: VBoxContainer, allow_close: bool, on_close: Cal
 			_sfx_confirm()
 			_open_settings())
 		col.add_child(settings_b)
+		var version_label := Label.new()
+		version_label.text = "v%s" % GC_VERSION
+		version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		version_label.add_theme_color_override("font_color", Tokens.TEXT_DIM)
+		version_label.add_theme_font_size_override("font_size", Tokens.FONT_SIZE_SMALL)
+		col.add_child(version_label)
 		add_nav.call(Callable())
 
 	# New Game's first step: how GC and KYBER fit together, and a one-click launch of KYBER with
@@ -4761,6 +4753,7 @@ func _build_campaign_wizard(col: VBoxContainer, allow_close: bool, on_close: Cal
 		offline_check.add_theme_icon_override("checked", _checkbox_icon(true))
 		offline_check.add_theme_icon_override("checked_disabled", _checkbox_icon(true))
 		offline_check.add_theme_constant_override("h_separation", 8)
+		_stabilize_checkbox(offline_check)
 		offline_check.tooltip_text = ("Each battle shows the settings to recreate in Arcade / "
 			+ "Instant Action; you report the winner by hand. Use when KYBER hosting is down.")
 		offline_check.button_pressed = GcPrefs.offline_mode()
@@ -5788,17 +5781,100 @@ func _offline_briefing_text() -> String:
 	var b := KyberBridge.offline_briefing(request, planet, ContentLoader.load_map_catalog(state.campaign_id),
 		_current_seat_faction(), state.difficulty)
 	var lane := not planet.capturable
+	var map_name := String(b["map_name"]) if lane else planet.display_name
 	var lines := PackedStringArray()
-	lines.append("[b]Offline battle[/b] — recreate this in Arcade / Instant Action:")
-	lines.append("Map: %s — %s. Bots ~%d allied vs ~%d enemy. AI: %s. You play: %s. Report the winner below." % [
-		String(b["map_name"]) if lane else planet.display_name, b["mode_name"],
-		int(b["your_bots"]), int(b["enemy_bots"]), b["ai_difficulty"], b["your_side"]])
-	if lane and _is_gcw():
-		lines.append("[i]Set Era to \"Original\" (cross-era); this Sequel ship co-op needs it.[/i]")
+	lines.append("[b]Offline battle[/b]")
+	lines.append("Recreate these settings in Arcade / Instant Action.")
+	lines.append("")
+	lines.append("[b]Map:[/b] %s" % map_name)
+	lines.append("[b]Mode:[/b] %s" % String(b["mode_name"]))
+	lines.append("[b]Era:[/b] %s" % _campaign_era_name())
+	lines.append("[b]Bots:[/b] ~%d allied vs ~%d enemy" % [int(b["your_bots"]), int(b["enemy_bots"])])
+	lines.append("[b]AI difficulty:[/b] %s" % String(b["ai_difficulty"]))
+	lines.append("[b]You play:[/b] %s" % String(b["your_side"]))
+	lines.append("")
+	lines.append("Report the winner below.")
+	if String(b.get("reason", "")) != "":
+		lines.append("")
+		lines.append("[i]%s[/i]" % String(b["reason"]))
 	return "\n".join(lines)
 
 
+## The Arcade / Instant Action era matching this campaign's factions.
+func _campaign_era_name() -> String:
+	if state == null:
+		return "Original"
+	if state.campaign_id == &"clone_wars":
+		return "Prequel"
+	if state.campaign_id == &"sequel_era":
+		return "Sequel"
+	return "Original"
+
+
+## The offline briefing is longer than the battle panel's message area; the panel now shows a
+## short line + a [url] link, and this popup carries the same text at full size, scrollable.
+func _on_panel_body_meta_clicked(meta: Variant) -> void:
+	if String(meta) == "offline_setup":
+		_sfx_confirm()
+		_show_offline_briefing_modal()
+
+
+func _show_offline_briefing_modal() -> void:
+	if is_instance_valid(_offline_briefing_modal):
+		_offline_briefing_modal.queue_free()
+		_offline_briefing_modal = null
+	# Centre the content both ways and let the panel hug it - the briefing is a short card,
+	# not a full-page document, so a tall mostly-empty box read as "text stuck at the top".
+	var shell := _modal_overlay("Offline battle setup", Vector2(720, 640), true, false, true)
+	_offline_briefing_modal = shell["overlay"]
+	var dismiss := func():
+		if is_instance_valid(_offline_briefing_modal):
+			_offline_briefing_modal.queue_free()
+		_offline_briefing_modal = null
+	_offline_briefing_modal.set_meta("controller_cancel", dismiss)
+	var body: VBoxContainer = shell["body"]
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = true
+	text.fit_content = true
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.custom_minimum_size.x = 640.0
+	text.add_theme_color_override("default_color", Tokens.TEXT)
+	text.text = "[center]%s[/center]" % _offline_briefing_text()
+	body.add_child(text)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(Tokens.SPACE_2))
+	var copy := Button.new()
+	copy.text = "Copy instructions"
+	copy.pressed.connect(func():
+		if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+			DisplayServer.clipboard_set(_offline_briefing_text())
+		_sfx_confirm())
+	row.add_child(copy)
+	var close := Button.new()
+	close.text = "Close"
+	close.pressed.connect(func():
+		_sfx_cancel()
+		dismiss.call())
+	row.add_child(close)
+	body.add_child(row)
+
+
 # --- KYBER match flow ----------------------------------------------------
+
+## The mode of the pending battle, resolved through the same map catalog the battle panel
+## uses. A result read from the KYBER log carries no `mode` field, so the restart policy
+## needs this to still recognise Supremacy.
+func _pending_battle_is_supremacy() -> bool:
+	if not state.has_pending_battle():
+		return false
+	var req := Battle.Request.from_dict(state.pending_battle)
+	var planet := state.get_planet(req.planet_id)
+	if planet == null:
+		return false
+	var params := KyberBridge.match_params(req, planet, ContentLoader.load_map_catalog(state.campaign_id),
+		_current_seat_faction(), state.two_player, GcPrefs.offline_mode())
+	return String(params.get("mode_name", "")) == "Supremacy"
+
 
 func _pending_team_one() -> StringName:
 	if not state.has_pending_battle():
@@ -5857,7 +5933,9 @@ func _stage_kyber_result(result: Dictionary) -> void:
 	# is ending or just has; best-effort, may or may not still be visible in time).
 	if _kyber_link != null and _kyber_link.is_online():
 		var victory := _result_victory_line()
-		if victory != "":
+		# A campaign-ending result gets ONE short line from _result_chat_line, not the
+		# generic "<FACTION> VICTORY" plus the capture line.
+		if victory != "" and not _result_ends_campaign():
 			_gc_chat(victory)
 		_gc_chat(_result_chat_line())
 		_schedule_match_restart(result)
@@ -6034,6 +6112,11 @@ func _on_kyber_play_pressed() -> void:
 	_groundwin_pending_battle_id = ""
 	var level_path := String(params["level_path"])
 
+	# StopEOR only for the capital-ship Supremacy (Clone Wars / Sequel Era). Everything else,
+	# GCW Supremacy included, runs the natural end-of-round and its next-level load.
+	_kyber_link.set_stop_eor(_campaign_has_capital_ship_phase()
+		and String(params["mode_name"]) == "Supremacy")
+
 	if _kyber_link.load_level(level_path, String(params["frostbite_mode"]),
 			bots_t1, bots_t2, aim_t1, aim_t2, 0, 0,
 			int(params["match_max_s"]), int(params["match_margin"])):
@@ -6059,7 +6142,7 @@ func _on_kyber_play_pressed() -> void:
 			"deadline_ms": Time.get_ticks_msec() + 16000,
 		}
 		_notice = "Sent \"%s\" to SWBF2 — waiting for the match to load…" % \
-			_battle_headline(request, planet, String(params.get("map_name", "")))
+			_battle_headline(request, planet, String(params.get("map_name", "")), String(params.get("mode_name", "")))
 		GcLog.note("battle", "requested %s — %s / %s | bots t1/t2 %d/%d | aim t1/t2 %.2f/%.2f | human T%d" % [
 			planet.display_name, params["frostbite_mode"], level_path,
 			bots_t1, bots_t2, aim_t1, aim_t2, human_team
@@ -6149,13 +6232,20 @@ func _kyber_await_failed(msg: String) -> void:
 ## capital-ship boarding co-op — "Board the Separatist Dreadnought" if the player's fleet is
 ## attacking, "Defend the Republic Venator" if it's the one being boarded. `map_name` is the
 ## resolved co-op entry's display_name ("Republic Venator — Co-Op Attack").
-func _battle_headline(request: Battle.Request, planet: Planet, map_name: String) -> String:
+func _battle_headline(request: Battle.Request, planet: Planet, map_name: String, mode_name: String = "") -> String:
 	if planet.capturable:
 		return "Battle for %s" % planet.display_name
-	var ship := map_name.split(" — ")[0].strip_edges()   # drop the "— Co-Op Attack/Defense" tail
-	if ship == "" or ship == map_name:
-		ship = "%s capital ship" % Faction.short_name(request.defender)
-	return ("Defend the %s" % ship) if _current_seat_faction() == request.defender else "Board the %s" % ship
+	var place := map_name.split(" — ")[0].strip_edges()   # drop the "— Blast / Co-Op Attack" tail
+	# A GCW lane is a Blast on an adjacent planet, not a capital-ship boarding. Only a real
+	# co-op map is a ship; everything else is a battle at the place.
+	var is_ship := mode_name.to_lower().contains("co-op") or map_name.to_lower().contains("co-op")
+	if not is_ship:
+		if place == "" or place == map_name:
+			place = planet.display_name
+		return "Battle at %s" % place
+	if place == "" or place == map_name:
+		place = "%s capital ship" % Faction.sentence_name(request.defender)
+	return ("Defend the %s" % place) if _current_seat_faction() == request.defender else "Board the %s" % place
 
 
 ## A line for the in-match chat: who is fighting for what, what a loss costs, and each
@@ -6175,11 +6265,11 @@ func _battle_briefing_line(request: Battle.Request, planet: Planet) -> String:
 	if not planet.capturable:
 		# A space lane — a capital-ship boarding co-op. The map is the defender's ship.
 		var brief := KyberBridge.build_briefing(request, planet, ContentLoader.load_map_catalog(state.campaign_id), _current_seat_faction())
-		return _battle_headline(request, planet, String(brief["map_name"])) + levels
+		return _battle_headline(request, planet, String(brief["map_name"]), String(brief.get("mode_name", ""))) + levels
 	var stake := ""
 	if planet.capital_faction != &"":
 		stake = ", the %s homeworld" % _faction_adjective(planet.capital_faction)
-	return "%s attacks %s%s%s" % [Faction.short_name(request.attacker), planet.display_name, stake, levels]
+	return "%s attacks %s%s%s" % [Faction.sentence_name(request.attacker), planet.display_name, stake, levels]
 
 
 ## The word that goes before "homeworld" / "fleet" — Faction.short_name reads wrong there for
@@ -6291,13 +6381,46 @@ func _result_chat_line() -> String:
 	var req := Battle.Request.from_dict(state.pending_battle)
 	var planet := state.get_planet(req.planet_id)
 	var winner: StringName = _pending_team_one() if winner_team == 1 else Faction.opponent(_pending_team_one())
-	var who := Faction.short_name(winner)
+	var who := Faction.sentence_name(winner)
 	var place := planet.display_name if planet != null else "the system"
+	# The campaign is won by taking the enemy capital ("Rebels wins and now controls Death
+	# Star II!"). Replace that with the one short campaign-ending line; the full epilogue is
+	# the GC victory modal.
+	if planet != null and planet.capital_faction != &"" and planet.capital_faction == Faction.opponent(winner):
+		return "%s WINS THE %s!" % [who.to_upper(), _campaign_war_name()]
 	if planet != null and not planet.capturable:
 		return "%s wins the space battle over %s." % [who, place]
 	if winner == req.attacker:
 		return "%s wins and now controls %s!" % [who, place]
 	return "%s holds %s — the assault is repelled." % [who, place]
+
+
+## True when the staged result takes the enemy capital - the campaign is over. Used to send
+## the single campaign-ending chat line instead of the normal victory + capture pair.
+func _result_ends_campaign() -> bool:
+	if _kyber_staged.is_empty() or not state.has_pending_battle():
+		return false
+	var winner_team := int(_kyber_staged.get("winner_team", 0))
+	if winner_team == 0:
+		return false
+	var req := Battle.Request.from_dict(state.pending_battle)
+	var planet := state.get_planet(req.planet_id)
+	if planet == null or planet.capital_faction == &"":
+		return false
+	var winner: StringName = _pending_team_one() if winner_team == 1 else Faction.opponent(_pending_team_one())
+	return planet.capital_faction == Faction.opponent(winner)
+
+
+## The war's short name for the campaign-ending chat line.
+func _campaign_war_name() -> String:
+	match state.campaign_id:
+		&"clone_wars":
+			return "CLONE WARS"
+		&"galactic_civil_war":
+			return "GALACTIC CIVIL WAR"
+		&"sequel_era":
+			return "GALACTIC WAR"
+	return "CAMPAIGN"
 
 
 ## A separate, unmissable victory line for the match chat, sent before the longer result
@@ -6308,7 +6431,7 @@ func _result_victory_line() -> String:
 	if winner_team == 0:
 		return ""
 	var winner: StringName = _pending_team_one() if winner_team == 1 else Faction.opponent(_pending_team_one())
-	return "%s VICTORY" % Faction.short_name(winner).to_upper()
+	return "%s VICTORY" % Faction.sentence_name(winner).to_upper()
 
 
 const MATCH_RESTART_DELAY_S := 2.5
@@ -6316,20 +6439,10 @@ const MATCH_RESTART_DELAY_S := 2.5
 ## load. Hold the map switch long enough for the two chat lines to be readable, without
 ## bringing back the crashing EOR path.
 const GROUND_PHASE_RESTART_DELAY_S := 5.5
-## `2026-10-08` (playtest 104, item 14): Blast has no round-end signal at all — the plugin's
-## `emit_result` fires the INSTANT a team's 100th kill lands (__init__.lua, BLAST_KILL_TARGET),
-## while players are still actively fighting. Hitting it with the same short delay as a
-## Supremacy/GA round — which by then has already finished and is mid-Outro — forces a hard
-## `Restart` on a match that's still fully live. Likely why a live Blast match on Bespin
-## crashed (item 14) and why the "back to GC" chat line was reported as not appearing for
-## Blast (item 12) — the restart may be landing too close to the final kill for either to
-## register before teardown. Giving Blast specifically the old, longer pre-921 delay lets the
-## chat line land and the round settle before the forced restart. Identified from the
-## plugin's own `reason` field (`"blast kills %d-%d"`, __init__.lua's emit_result) — not a new
-## schema, just reading the one the plugin already sends. Unverified live; if Blast still
-## crashes or still eats the chat line, the next thing to try is a real KYBER log capture from
-## that exact match (Hard Rule 5 — no schema beyond what's already read here should be guessed).
-const BLAST_LIVE_RESTART_DELAY_S := 6.0
+## `2026-11-03`: GC's Restart is SUPREMACY ONLY. Blast, GA and co-op leave the game's own
+## end-of-round/EOR and natural next-level load alone - the v33 playtest showed that is
+## stable and brings back the victory/defeat screen. The old Blast-specific delay went with
+## the restart itself; there is no GC map switch to time for those modes any more.
 ## `2026-09-19` playtest: "still crashes after a Supremacy match — just skip map/restart after
 ## triggering end of match." KYBER's own natural end-of-round (LoadNextLevel of an empty
 ## rotation) is what crashes (docs/SUPREMACY_PHASE.md); once GC has a determinate winner there's
@@ -6345,12 +6458,21 @@ const BLAST_LIVE_RESTART_DELAY_S := 6.0
 func _schedule_match_restart(result: Dictionary) -> void:
 	if int(result.get("winner_team", 0)) == 0 or _kyber_link == null:
 		return
+	# `2026-11-03`: the artificial end-of-round (StopEOR + GC Restart) is ONLY for the
+	# capital-ship Supremacy of Clone Wars / Sequel Era. Every other mode and campaign -
+	# including GCW Supremacy, which has no ship phase - lets the game's natural EOR and
+	# next-level transition run (v33 playtest: no crash, EOR and the next map both worked).
+	var mode := String(result.get("mode", ""))
+	var is_supremacy := mode == "Mode1" or String(result.get("source", "")) == "ground_phase" \
+		or _pending_battle_is_supremacy()
+	if not (_campaign_has_capital_ship_phase() and is_supremacy):
+		GcLog.note("battle", "no GC restart - leaving the natural end-of-round alone (%s, %s)" % [
+			mode, String(state.campaign_id)])
+		_gc_chat("Back to Galactic Conquest for the next move — watch here for the next match.")
+		return
 	var battle_id := String(state.pending_battle.get("id", ""))
-	var is_blast_live_kill := String(result.get("reason", "")).begins_with("blast kills")
 	var delay := MATCH_RESTART_DELAY_S
-	if is_blast_live_kill:
-		delay = BLAST_LIVE_RESTART_DELAY_S
-	elif String(result.get("source", "")) == "ground_phase":
+	if String(result.get("source", "")) == "ground_phase":
 		delay = GROUND_PHASE_RESTART_DELAY_S
 	get_tree().create_timer(delay).timeout.connect(func():
 		if not is_instance_valid(self) or _kyber_link == null or not _kyber_link.is_online():
@@ -6382,7 +6504,7 @@ func _describe_staged_result() -> String:
 	var winner_team := int(_kyber_staged.get("winner_team", 0))
 	if winner_team == 0:
 		return "no clear winner%s — use the manual buttons" % ((" (%s)" % tally) if tally != "" else "")
-	var who := Faction.short_name(_pending_team_one()) if winner_team == 1 		else Faction.short_name(Faction.opponent(_pending_team_one()))
+	var who := Faction.sentence_name(_pending_team_one()) if winner_team == 1 		else Faction.sentence_name(Faction.opponent(_pending_team_one()))
 	if String(_kyber_staged.get("source", "")) == "kyber_log" or tally == "":
 		return "%s won" % who
 	return "%s won (%s)" % [who, tally]
@@ -6393,7 +6515,12 @@ func _on_kyber_connect_pressed() -> void:
 		return
 	_notice = ""
 	if not KyberPluginInstaller.kyber_running():
-		var res := KyberPluginInstaller.launch(KyberPluginInstaller.configured_launcher_path())
+		# Same resolution order as the wizard's Launch button: a saved path, then auto-detect.
+		# A first-time player can reach this button before ever opening KYBER Setup.
+		var path := KyberPluginInstaller.configured_launcher_path()
+		if path.is_empty():
+			path = KyberPluginInstaller.detect_launcher()
+		var res := KyberPluginInstaller.launch(path)
 		if bool(res.get("ok", false)):
 			_notice = "KYBER is starting with the GC plugin. Click Host in KYBER — GC will connect."
 		else:
@@ -7731,7 +7858,7 @@ func _refresh() -> void:
 			# blocked once state.is_over(), so active_faction never advances past it), but
 			# naming the winner outright reads better for two people who just played it out
 			# together than a one-sided "you win" framing would.
-			_panel_title.text = "%s WINS" % Faction.short_name(winner).to_upper()
+			_panel_title.text = "%s WINS" % Faction.sentence_name(winner).to_upper()
 			_panel_body.text = "%s has fallen. The %s campaign ends here." % [
 				cap, Faction.display_name(Faction.opponent(winner))]
 		elif winner == _current_seat_faction():
@@ -7773,7 +7900,7 @@ func _refresh() -> void:
 		var planet := state.get_planet(request.planet_id)
 		var brief := KyberBridge.build_briefing(request, planet, ContentLoader.load_map_catalog(state.campaign_id), _current_seat_faction(), GcPrefs.offline_mode())
 		var mp := KyberBridge.match_params(request, planet, ContentLoader.load_map_catalog(state.campaign_id), _current_seat_faction(), state.two_player, GcPrefs.offline_mode())
-		var headline := _battle_headline(request, planet, String(brief["map_name"]))
+		var headline := _battle_headline(request, planet, String(brief["map_name"]), String(brief.get("mode_name", "")))
 		var line: String
 		if planet.capturable:
 			line = "[b]%s[/b] · %s · bots %d/%d · %s def" % [
@@ -7938,7 +8065,22 @@ func _refresh() -> void:
 	# Offline mode replaces the whole KYBER flow: the setup briefing goes in the centred
 	# message area, and the manual winner buttons below are the result path.
 	if battling and offline:
-		_panel_body.text += "\n\n" + _offline_briefing_text()
+		_panel_body.text += "\n\n[color=#%s]Offline battle[/color] — recreate this in Arcade / Instant Action. [url=offline_setup]Show setup details[/url]" % \
+			Tokens.TEXT_DIM.to_html(false)
+	# A real button as well: the link above lives in text that gets rebuilt on every refresh
+	# and is easy to lose track of. This is always in the battle row while offline.
+	if _offline_setup_button != null:
+		_offline_setup_button.visible = battling and offline
+
+	# A plugin packaged by an older GC build (KYBER left open across an update) may not
+	# understand commands this build sends. The plugin bumps its build string on every change
+	# and reports it in `hello`, so this is exact rather than a guess.
+	if battling and _kyber_link != null and _kyber_link.is_online() \
+			and _kyber_link.plugin_build != "" \
+			and _kyber_link.plugin_build != KyberLink.EXPECTED_PLUGIN_BUILD:
+		_panel_body.text += ("\n\n[color=#%s]KYBER is running an older GC plugin (%s). "
+			+ "Restart KYBER from Settings → KYBER Setup… before playing.[/color]") % [
+				Tokens.WARNING.to_html(false), _kyber_link.plugin_build]
 
 	# A net client never drives KYBER at all — the host is the sole authority (gc_net.gd's
 	# header). Hiding this whole block for a client, rather than leaving it present-but-inert,

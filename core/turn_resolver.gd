@@ -292,17 +292,21 @@ static func _fold_battle_result(state: GalaxyState, req: Battle.Request, result:
 		return false
 
 	if not result.completed:
-		# Abandoned match. The turn is spent, and the side that walked away loses its
-		# fleet — abandoning is a forfeit, not a free way to reposition. A NEUTRAL
-		# `abandoned_by` (a stuck/unreadable match nobody forfeited) changes nothing else.
+		# Abandoned match = forfeit. The side that walked away loses the battle and its
+		# fleet, and the other side is credited with the win. An abandoned DEFENCE also
+		# hands the world (or the lane position) to the attacker - walking away must never
+		# work as a free way to push an attack back. A NEUTRAL `abandoned_by` (a
+		# stuck/unreadable match nobody forfeited) only spends the turn.
 		fleet.has_moved = true
 		if result.abandoned_by == req.attacker:
+			state.record_battle_result(req.defender, req.attacker)
 			state.remove_fleet(fleet.id)
 		elif result.abandoned_by == req.defender:
-			var defenders: Array[Fleet] = state.fleets_at(req.planet_id)
-			for f in defenders:
+			state.record_battle_result(req.attacker, req.defender)
+			for f in state.fleets_at(req.planet_id):
 				if f.owner == req.defender:
 					state.remove_fleet(f.id)
+			_take_planet(state, req, fleet, planet)
 		return true
 
 	fleet.apply_losses(result.attacker_losses)
@@ -311,22 +315,27 @@ static func _fold_battle_result(state: GalaxyState, req: Battle.Request, result:
 		req.defender if result.victor == req.attacker else req.attacker)
 
 	if result.victor == req.attacker and not fleet.is_destroyed():
-		# The attacker takes the world (a space lane just changes hands as a position);
-		# whatever fleets defended it are swept away.
-		if planet.capturable:
-			planet.owner = req.attacker
-			planet.garrison = fleet.strength
-			state.record_world_captured(req.attacker)
-		fleet.location = req.planet_id
-		for f in state.fleets_at(req.planet_id):
-			if f.owner == req.defender:
-				state.remove_fleet(f.id)
-		fleet.has_moved = true
+		_take_planet(state, req, fleet, planet)
 	else:
 		# A failed assault (or a pyrrhic one that wiped the fleet) costs the whole force.
 		state.remove_fleet(fleet.id)
 
 	return true
+
+
+## Move the winning attacker onto the contested world/lane and sweep the defender's ships
+## out of it. A capturable world changes hands; a space lane stays unowned and only the
+## position changes hands.
+static func _take_planet(state: GalaxyState, req: Battle.Request, fleet: Fleet, planet: Planet) -> void:
+	if planet.capturable:
+		planet.owner = req.attacker
+		planet.garrison = fleet.strength
+		state.record_world_captured(req.attacker)
+	fleet.location = req.planet_id
+	for f in state.fleets_at(req.planet_id):
+		if f.owner == req.defender:
+			state.remove_fleet(f.id)
+	fleet.has_moved = true
 
 
 ## Build a result from nothing but a reported winner. Used when a human plays the match
@@ -351,7 +360,9 @@ static func manual_result(request: Battle.Request, victor: StringName) -> Battle
 
 
 ## A result for a match nobody finished. The turn is spent, and the `abandoned_by` side (if
-## given) forfeits its fleet; leave it NEUTRAL for a stuck match where nobody walked away.
+## given) forfeits the battle and its fleet - the opponent gets the win, and an abandoned
+## defence hands the planet/lane to the attacker. Leave it NEUTRAL for a stuck match where
+## nobody walked away.
 static func abandoned_result(request: Battle.Request, abandoned_by: StringName = Faction.NEUTRAL) -> Battle.Result:
 	var r := Battle.Result.new()
 	r.request_id = request.id

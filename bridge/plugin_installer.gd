@@ -37,7 +37,6 @@ const LOG_LEVEL := "debug"
 const MESSAGE_DEBUG_VAR := "KYBER_MESSAGE_DEBUG"
 const CONFIG_PATH := "user://kyber_setup.cfg"
 const LAUNCHER_EXE := "kyber_launcher.exe"
-const START_MENU_LNK := "Microsoft/Windows/Start Menu/Programs/KYBER Launcher.lnk"
 const PLUGIN_SUBDIR := "GalacticConquest"
 const KBPLUGIN_NAME := "gc_result.kbplugin"
 
@@ -101,14 +100,48 @@ static func _save_launcher_path(p: String) -> void:
 
 # --- detection --------------------------------------------------------------
 
-## Resolve kyber_launcher.exe from its Start Menu shortcut. "" if not found.
+## Resolve kyber_launcher.exe from a shortcut, then from the official install locations.
+## Checks the per-machine AND per-user Start Menu plus desktop shortcuts: the old build only
+## looked at ProgramData, so a per-user install (or one where the shortcut was declined)
+## could never be auto-detected and the player had to paste the path by hand.
 static func detect_launcher() -> String:
 	if OS.get_name() != "Windows":
 		return ""
-	var program_data := OS.get_environment("ProgramData")
-	if program_data.is_empty():
-		program_data = "C:/ProgramData"
-	var lnk := program_data.replace("\\", "/").path_join(START_MENU_LNK)
+	var lnks: Array[String] = []
+	for raw in [OS.get_environment("ProgramData"), OS.get_environment("APPDATA")]:
+		var base := String(raw)
+		if base.is_empty():
+			continue
+		lnks.append(base.replace("\\", "/").path_join(
+			"Microsoft/Windows/Start Menu/Programs/KYBER Launcher.lnk"))
+	for raw in [OS.get_environment("USERPROFILE"), OS.get_environment("PUBLIC")]:
+		var base := String(raw)
+		if base.is_empty():
+			continue
+		lnks.append(base.replace("\\", "/").path_join("Desktop/KYBER Launcher.lnk"))
+	for lnk in lnks:
+		var target := _shortcut_target(lnk)
+		if not target.is_empty():
+			return target
+	# Default installer locations, checked only after the shortcuts so a custom install's
+	# shortcut still wins.
+	var candidates: Array[String] = []
+	for base in [OS.get_environment("ProgramFiles(x86)"), OS.get_environment("ProgramFiles"),
+			OS.get_environment("LOCALAPPDATA")]:
+		var base_str := String(base)
+		if base_str.is_empty():
+			continue
+		var root: String = base_str.replace("\\", "/")
+		candidates.append(root.path_join("KYBER Launcher/kyber_launcher.exe"))
+		candidates.append(root.path_join("Programs/KYBER Launcher/kyber_launcher.exe"))
+	for p in candidates:
+		if FileAccess.file_exists(p):
+			return p
+	return ""
+
+
+## The real path a .lnk points at, or "" if it is missing / unreadable / points nowhere.
+static func _shortcut_target(lnk: String) -> String:
 	if not FileAccess.file_exists(lnk):
 		return ""
 	var out: Array = []

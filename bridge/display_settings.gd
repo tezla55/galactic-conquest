@@ -46,7 +46,9 @@ static func apply(settings: Dictionary) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var screen_size := DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+	# A size saved on a bigger monitor must not strand the window partly off a smaller one.
+	size = Vector2i(mini(size.x, screen_size.x), mini(size.y, screen_size.y))
 	DisplayServer.window_set_size(size)
-	var screen := DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
 	var pos := DisplayServer.screen_get_position(DisplayServer.window_get_current_screen())
-	DisplayServer.window_set_position(pos + (screen - size) / 2)
+	DisplayServer.window_set_position(pos + (screen_size - size) / 2)
